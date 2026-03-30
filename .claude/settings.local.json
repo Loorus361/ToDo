@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Read(//usr/local/bin/**)",
+      "Read(//Users/carlosanderssohn/**)",
+      "Read(//opt/homebrew/bin/**)",
+      "Bash(source ~/.zshrc)",
+      "Bash(source ~/.zprofile)",
+      "Bash(export PATH=$PATH:/usr/local/bin:/opt/homebrew/bin:/opt/homebrew/sbin)",
+      "Read(//Applications/**)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(''''Lock-File OK, packages:'''', len\\(d.get\\(''''packages'''',{}\\)\\)\\)\")",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(node_modules/.bin/vite build:*)",
+      "Bash(node_modules/.bin/npm audit:*)",
+      "Bash(node_modules/.bin/npx --no audit)",
+      "Bash(node_modules/.bin/vite --version)"
+    ]
+  }
+}
