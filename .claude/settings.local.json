@@ -14,7 +14,10 @@
       "Bash(node_modules/.bin/vite build:*)",
       "Bash(node_modules/.bin/npm audit:*)",
       "Bash(node_modules/.bin/npx --no audit)",
-      "Bash(node_modules/.bin/vite --version)"
+      "Bash(node_modules/.bin/vite --version)",
+      "Bash(npm run:*)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(grep -o \"bg-yellow-400\" /Users/carlosanderssohn/Claude/Arbeit/ToDo-Manager/dist/assets/*.css)"
     ]
   }
 }

@@ -20,7 +20,7 @@ const COLUMN_LABELS: Record<KanbanStatus, string> = {
 
 const COLUMN_ACCENT: Record<KanbanStatus, string> = {
   backlog: 'bg-gray-400',
-  doing: 'bg-primary-500',
+  doing: 'bg-yellow-400',
   done: 'bg-green-500',
 };
 
