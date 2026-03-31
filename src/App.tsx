@@ -1,4 +1,4 @@
-import { LayoutDashboard, FolderOpen, Users, Download, Circle } from 'lucide-react';
+import { LayoutDashboard, FolderOpen, Users, Save, Upload, Settings, Circle } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useStore, type View } from './store/useStore';
 import { usePersistence } from './hooks/usePersistence';
@@ -7,6 +7,7 @@ import KanbanBoard from './components/KanbanBoard';
 import ProjectsView from './components/ProjectsView';
 import ProjectDetail from './components/ProjectDetail';
 import ContactsView from './components/ContactsView';
+import SettingsView from './components/SettingsView';
 import { BackupModal } from './components/BackupModal';
 
 const NAV_ITEMS: { view: View; label: string; icon: React.ReactNode }[] = [
@@ -16,7 +17,6 @@ const NAV_ITEMS: { view: View; label: string; icon: React.ReactNode }[] = [
 ];
 
 export default function App() {
-  // Persistenz-Hook einmalig auf oberster Ebene einbinden
   usePersistence();
 
   const {
@@ -67,21 +67,36 @@ export default function App() {
           ))}
         </nav>
 
-        {/* Backup-Button (Sidebar Footer) */}
+        {/* Footer */}
         <div className="pt-4 border-t border-gray-100 mt-4 flex flex-col gap-1">
           <button
             onClick={handleManualExport}
-            className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-colors w-full text-left"
+            className={clsx(
+              'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors w-full text-left',
+              isDirty ? 'text-primary-600 hover:bg-primary-50' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+            )}
           >
-            <Download size={18} />
-            Backup (JSON)
+            <Save size={18} />
+            Speichern
           </button>
           <button
             onClick={() => setShowBackupModal(true)}
             className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-colors w-full text-left"
           >
-            <FolderOpen size={18} />
+            <Upload size={18} />
             Importieren
+          </button>
+          <button
+            onClick={() => setActiveView('settings')}
+            className={clsx(
+              'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors w-full text-left',
+              activeView === 'settings'
+                ? 'bg-primary-50 text-primary-600'
+                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+            )}
+          >
+            <Settings size={18} />
+            Einstellungen
           </button>
         </div>
       </aside>
@@ -101,6 +116,7 @@ export default function App() {
             selectedProjectId != null ? <ProjectDetail /> : <ProjectsView />
           )}
           {activeView === 'contacts' && <ContactsView />}
+          {activeView === 'settings' && <SettingsView />}
         </div>
       </main>
 

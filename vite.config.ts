@@ -4,6 +4,12 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   base: '/ToDo/',
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+  },
+  optimizeDeps: {
+    include: ['@dnd-kit/sortable', '@dnd-kit/utilities'],
+  },
   plugins: [
     react(),
     VitePWA({

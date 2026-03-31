@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type View = 'dashboard' | 'projects' | 'contacts';
+export type View = 'dashboard' | 'projects' | 'contacts' | 'settings';
 
 interface AppState {
   activeView: View;
@@ -13,6 +13,11 @@ interface AppState {
   // Backup-Modal: gesteuert durch 30-Min-Timer oder manuellen Trigger
   showBackupModal: boolean;
   setShowBackupModal: (value: boolean) => void;
+  // Dashboard-Filter
+  filterProjectId: number | null;
+  setFilterProjectId: (id: number | null) => void;
+  showArchived: boolean;
+  setShowArchived: (value: boolean) => void;
 }
 
 export const useStore = create<AppState>((set) => ({
@@ -24,4 +29,8 @@ export const useStore = create<AppState>((set) => ({
   setIsDirty: (value) => set({ isDirty: value }),
   showBackupModal: false,
   setShowBackupModal: (value) => set({ showBackupModal: value }),
+  filterProjectId: null,
+  setFilterProjectId: (id) => set({ filterProjectId: id }),
+  showArchived: false,
+  setShowArchived: (value) => set({ showArchived: value }),
 }));
