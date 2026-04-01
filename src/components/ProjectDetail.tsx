@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import {
   ArrowLeft, Plus, Phone, Mail, ArrowDownLeft, ArrowUpRight, Calendar, UserPlus, Trash2,
-  ChevronDown, ChevronUp, GripVertical,
+  ChevronDown, ChevronUp, GripVertical, Pencil, Check,
 } from 'lucide-react';
 import {
   DndContext, type DragEndEvent, PointerSensor, useSensor, useSensors,
@@ -12,7 +12,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { clsx } from 'clsx';
-import { db, type Milestone } from '../db/db';
+import { db, type Milestone, type Communication } from '../db/db';
 import { useStore } from '../store/useStore';
 import { getProjectColor } from '../utils/projectColors';
 import { TodoDetailModal } from './TodoDetailModal';
@@ -151,31 +151,31 @@ function MilestoneRow({ milestone }: { milestone: Milestone }) {
 function QuickAddPersonForm({ onCreated }: { onCreated: (id: number) => void; onClose: () => void }) {
   const [name, setName] = useState('');
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleCreate() {
     if (!name.trim()) return;
     const id = await db.persons.add({ name: name.trim() });
     onCreated(id as number);
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2 mt-1">
+    <div className="flex gap-2 mt-1">
       <input
         autoFocus
         type="text"
         placeholder="Name *"
         value={name}
         onChange={(e) => setName(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
         className="flex-1 border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
-        required
       />
       <button
-        type="submit"
+        type="button"
+        onClick={handleCreate}
         className="px-3 py-1.5 bg-primary-500 text-white text-xs rounded-lg hover:bg-primary-600 transition-colors"
       >
         Anlegen
       </button>
-    </form>
+    </div>
   );
 }
 
@@ -231,6 +231,99 @@ function GenerateTodoForm({ projectId, commId, onDone }: { projectId: number; co
   );
 }
 
+// ─── Kommunikations-Bearbeitung ───────────────────────────────────────────────
+function CommEditPanel({ commId, onClose }: { commId: number; onClose: () => void }) {
+  const comm = useLiveQuery(() => db.communications.get(commId), [commId]);
+  const persons = useLiveQuery(() => db.persons.orderBy('name').toArray(), []);
+  const [content, setContent] = useState('');
+
+  // Lokalen content-State initialisieren
+  useState(() => { if (comm) setContent(comm.content); });
+
+  if (!comm) return null;
+
+  async function save(partial: Partial<Communication>) {
+    await db.communications.update(commId, partial);
+  }
+
+  async function handleDelete() {
+    if (!confirm('Kommunikationseintrag löschen?')) return;
+    await db.communications.delete(commId);
+    onClose();
+  }
+
+  return (
+    <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg flex flex-col gap-3">
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Bearbeiten</p>
+
+      {/* ★ HIER: Überschriften "Richtung" und "Medium" im Bearbeiten-Panel (CommEditPanel) */}
+      <div className="flex gap-4 flex-wrap">
+        <div className="flex flex-col gap-1">
+          <div className="flex gap-1">
+            {(['In', 'Out'] as const).map((v) => (
+              <button key={v} type="button" onClick={() => save({ type: v })}
+                className={clsx('px-3 py-1 text-xs rounded-md border transition-colors',
+                  comm.type === v ? 'bg-primary-500 text-white border-primary-500' : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                )}>
+                {v === 'In' ? 'Eingehend' : 'Ausgehend'}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex flex-col gap-1">
+          <div className="flex gap-1">
+            {(['Mail', 'Phone'] as const).map((v) => (
+              <button key={v} type="button" onClick={() => save({ medium: v })}
+                className={clsx('flex items-center gap-1 px-3 py-1 text-xs rounded-md border transition-colors',
+                  comm.medium === v ? 'bg-primary-500 text-white border-primary-500' : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                )}>
+                {v === 'Mail' ? <Mail size={11} /> : <Phone size={11} />}
+                {v === 'Mail' ? 'E-Mail' : 'Telefon'}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Datum */}
+      <div className="flex items-center gap-2">
+        <Calendar size={13} className="text-gray-400" />
+        <input type="datetime-local" defaultValue={comm.timestamp}
+          onBlur={(e) => e.target.value && save({ timestamp: e.target.value })}
+          className="border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+        />
+      </div>
+
+      {/* Kontakt */}
+      <select defaultValue={comm.personId ?? ''}
+        onChange={(e) => save({ personId: e.target.value ? Number(e.target.value) : undefined })}
+        className="border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300">
+        <option value="">— Kein Kontakt —</option>
+        {persons?.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+      </select>
+
+      {/* Inhalt */}
+      <textarea value={content} onChange={(e) => setContent(e.target.value)}
+        onBlur={() => save({ content: content.trim() || comm.content })}
+        rows={3}
+        className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 resize-none"
+      />
+
+      {/* Aktionen */}
+      <div className="flex gap-2">
+        <button type="button" onClick={onClose}
+          className="flex items-center gap-1 px-3 py-1.5 bg-primary-500 text-white text-xs rounded-lg hover:bg-primary-600 transition-colors">
+          <Check size={12} /> Fertig
+        </button>
+        <button type="button" onClick={handleDelete}
+          className="flex items-center gap-1 px-3 py-1.5 text-xs text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">
+          <Trash2 size={12} /> Löschen
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Kommunikations-Formular ──────────────────────────────────────────────────
 function AddCommunicationForm({ projectId }: { projectId: number }) {
   const [open, setOpen] = useState(false);
@@ -272,9 +365,9 @@ function AddCommunicationForm({ projectId }: { projectId: number }) {
 
   return (
     <form onSubmit={handleSubmit} className="mt-3 p-4 border border-gray-200 rounded-xl bg-gray-50 flex flex-col gap-3">
+      {/* ★ HIER: Überschriften "Richtung" und "Medium" im Neu-Anlegen-Formular (AddCommunicationForm) */}
       <div className="flex gap-4 flex-wrap">
         <div className="flex flex-col gap-1">
-          <span className="text-xs text-gray-500 font-medium">Richtung</span>
           <div className="flex gap-1">
             {(['In', 'Out'] as const).map((v) => (
               <button key={v} type="button" onClick={() => setType(v)}
@@ -287,7 +380,6 @@ function AddCommunicationForm({ projectId }: { projectId: number }) {
           </div>
         </div>
         <div className="flex flex-col gap-1">
-          <span className="text-xs text-gray-500 font-medium">Medium</span>
           <div className="flex gap-1">
             {(['Mail', 'Phone'] as const).map((v) => (
               <button key={v} type="button" onClick={() => setMedium(v)}
@@ -398,6 +490,7 @@ function AddTodoInlineForm({ projectId, onDone }: { projectId: number; onDone: (
 export default function ProjectDetail() {
   const { selectedProjectId, setSelectedProjectId } = useStore();
   const [generateForCommId, setGenerateForCommId] = useState<number | null>(null);
+  const [editCommId, setEditCommId] = useState<number | null>(null);
   const [showAddTodo, setShowAddTodo] = useState(false);
   const [showAddMilestone, setShowAddMilestone] = useState(false);
   const [openTodoId, setOpenTodoId] = useState<number | null>(null);
@@ -562,7 +655,7 @@ export default function ProjectDetail() {
         <div className="mt-4 flex flex-col gap-3">
           {communications?.length === 0 && <p className="text-sm text-gray-400">Noch keine Einträge.</p>}
           {communications?.map((comm) => (
-            <div key={comm.id} className="border border-gray-100 rounded-xl p-3">
+            <div key={comm.id} className="border border-gray-100 rounded-xl p-3 group">
               <div className="flex items-center gap-2 flex-wrap mb-1.5">
                 <span className={clsx('flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full',
                   comm.type === 'In' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600')}>
@@ -581,21 +674,33 @@ export default function ProjectDetail() {
                     day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
                   })}
                 </span>
+                <button
+                  onClick={() => setEditCommId(editCommId === comm.id ? null : comm.id!)}
+                  className="p-1 text-gray-300 hover:text-primary-500 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0"
+                  title="Bearbeiten"
+                >
+                  <Pencil size={12} />
+                </button>
               </div>
               <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{comm.content}</p>
-              <div className="mt-2">
-                {comm.generatedTodoId ? (
-                  <span className="text-xs text-green-600">✓ Frist angelegt</span>
-                ) : (
-                  <button
-                    onClick={() => setGenerateForCommId(generateForCommId === comm.id ? null : comm.id!)}
-                    className="text-xs font-medium text-primary-600 hover:text-primary-700"
-                  >
-                    + Frist generieren
-                  </button>
-                )}
-              </div>
-              {generateForCommId === comm.id && (
+              {editCommId === comm.id && (
+                <CommEditPanel commId={comm.id!} onClose={() => setEditCommId(null)} />
+              )}
+              {editCommId !== comm.id && (
+                <div className="mt-2">
+                  {comm.generatedTodoId ? (
+                    <span className="text-xs text-green-600">✓ Frist angelegt</span>
+                  ) : (
+                    <button
+                      onClick={() => setGenerateForCommId(generateForCommId === comm.id ? null : comm.id!)}
+                      className="text-xs font-medium text-primary-600 hover:text-primary-700"
+                    >
+                      + Frist generieren
+                    </button>
+                  )}
+                </div>
+              )}
+              {generateForCommId === comm.id && editCommId !== comm.id && (
                 <GenerateTodoForm
                   projectId={selectedProjectId!}
                   commId={comm.id!}

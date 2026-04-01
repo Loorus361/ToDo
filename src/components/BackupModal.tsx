@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { Download, Upload, X, ShieldCheck } from 'lucide-react';
 import { exportDatabase, importDatabase } from '../utils/dbBackup';
 import { useStore } from '../store/useStore';
@@ -14,6 +14,15 @@ export function BackupModal({ isReminder = false, onClose }: Props) {
   const [importing, setImporting] = useState(false);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // ESC schließt das Modal
+  const handleEsc = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') onClose();
+  }, [onClose]);
+  useEffect(() => {
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [handleEsc]);
 
   async function handleExport() {
     const ok = await exportDatabase();

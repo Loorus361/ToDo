@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { X, Calendar, AlignLeft, FolderOpen } from 'lucide-react';
 import { clsx } from 'clsx';
@@ -41,6 +41,15 @@ export function TodoDetailModal({ todoId, onClose }: Props) {
       setDescription(todo.description ?? '');
     }
   }, [todo?.id]); // nur bei Wechsel des Todos re-initialisieren
+
+  // ESC schließt das Modal
+  const handleEsc = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') onClose();
+  }, [onClose]);
+  useEffect(() => {
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [handleEsc]);
 
   if (!todo) return null;
 
