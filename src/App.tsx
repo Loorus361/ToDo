@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { LayoutDashboard, FolderOpen, Users, Save, Upload, Settings, Circle } from 'lucide-react';
+import { LayoutDashboard, FolderOpen, Users, Save, Upload, Settings, Circle, GraduationCap } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useStore, type View } from './store/useStore';
 import { usePersistence } from './hooks/usePersistence';
@@ -11,11 +11,13 @@ import ProjectDetail from './components/ProjectDetail';
 import ContactsView from './components/ContactsView';
 import SettingsView from './components/SettingsView';
 import { BackupModal } from './components/BackupModal';
+import AusbildungsverlaufView from './components/AusbildungsverlaufView';
 
 const NAV_ITEMS: { view: View; label: string; icon: React.ReactNode }[] = [
   { view: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
   { view: 'projects', label: 'Projekte', icon: <FolderOpen size={18} /> },
   { view: 'contacts', label: 'Kontakte', icon: <Users size={18} /> },
+  { view: 'ausbildung', label: 'Ausbildung', icon: <GraduationCap size={18} /> },
 ];
 
 export default function App() {
@@ -125,6 +127,11 @@ export default function App() {
             selectedProjectId != null ? <ProjectDetail /> : <ProjectsView />
           )}
           {activeView === 'contacts' && <ContactsView />}
+          {activeView === 'ausbildung' && (
+            <div className="flex flex-col h-[calc(100vh-4rem)]">
+              <AusbildungsverlaufView />
+            </div>
+          )}
           {activeView === 'settings' && <SettingsView />}
         </div>
       </main>
