@@ -17,7 +17,13 @@
       "Bash(node_modules/.bin/vite --version)",
       "Bash(npm run:*)",
       "mcp__Claude_Preview__preview_start",
-      "Bash(grep -o \"bg-yellow-400\" /Users/carlosanderssohn/Claude/Arbeit/ToDo-Manager/dist/assets/*.css)"
+      "Bash(grep -o \"bg-yellow-400\" /Users/carlosanderssohn/Claude/Arbeit/ToDo-Manager/dist/assets/*.css)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npx tsc:*)",
+      "Bash(export PATH=\"/usr/local/bin:/opt/homebrew/bin:$PATH\")",
+      "Bash(ls ~/.nvm/versions/node/*/bin/node)"
     ]
   }
 }

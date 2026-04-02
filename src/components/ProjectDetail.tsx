@@ -494,6 +494,7 @@ export default function ProjectDetail() {
   const [showAddTodo, setShowAddTodo] = useState(false);
   const [showAddMilestone, setShowAddMilestone] = useState(false);
   const [openTodoId, setOpenTodoId] = useState<number | null>(null);
+  const [commPersonFilter, setCommPersonFilter] = useState<number | null>(null);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -522,6 +523,12 @@ export default function ProjectDetail() {
   const personMap = Object.fromEntries((persons ?? []).map((p) => [p.id!, p.name]));
   const pc = getProjectColor(project.color);
   const sortedMilestones = [...(milestones ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  const commPersonIds = [...new Set((communications ?? []).map((c) => c.personId).filter(Boolean) as number[])];
+  const commFilterPersons = (persons ?? []).filter((p) => commPersonIds.includes(p.id!));
+  const filteredComms = commPersonFilter != null
+    ? (communications ?? []).filter((c) => c.personId === commPersonFilter)
+    : (communications ?? []);
 
   function handleMilestoneDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -652,9 +659,23 @@ export default function ProjectDetail() {
       <section>
         <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Kommunikation</h3>
         <AddCommunicationForm projectId={selectedProjectId!} />
+        {commFilterPersons.length > 1 && (
+          <div className="mt-3 flex items-center gap-2">
+            <select
+              value={commPersonFilter ?? ''}
+              onChange={(e) => setCommPersonFilter(e.target.value ? Number(e.target.value) : null)}
+              className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-300"
+            >
+              <option value="">Alle Kontakte</option>
+              {commFilterPersons.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="mt-4 flex flex-col gap-3">
-          {communications?.length === 0 && <p className="text-sm text-gray-400">Noch keine Einträge.</p>}
-          {communications?.map((comm) => (
+          {filteredComms.length === 0 && <p className="text-sm text-gray-400">Noch keine Einträge.</p>}
+          {filteredComms.map((comm) => (
             <div key={comm.id} className="border border-gray-100 rounded-xl p-3 group">
               <div className="flex items-center gap-2 flex-wrap mb-1.5">
                 <span className={clsx('flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full',
@@ -689,13 +710,13 @@ export default function ProjectDetail() {
               {editCommId !== comm.id && (
                 <div className="mt-2">
                   {comm.generatedTodoId ? (
-                    <span className="text-xs text-green-600">✓ Frist angelegt</span>
+                    <span className="text-xs text-green-600">✓ ToDo angelegt</span>
                   ) : (
                     <button
                       onClick={() => setGenerateForCommId(generateForCommId === comm.id ? null : comm.id!)}
                       className="text-xs font-medium text-primary-600 hover:text-primary-700"
                     >
-                      + Frist generieren
+                      + ToDo anlegen
                     </button>
                   )}
                 </div>

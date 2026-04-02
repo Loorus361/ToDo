@@ -1,8 +1,10 @@
+import { useEffect } from 'react';
 import { LayoutDashboard, FolderOpen, Users, Save, Upload, Settings, Circle } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useStore, type View } from './store/useStore';
 import { usePersistence } from './hooks/usePersistence';
 import { exportDatabase } from './utils/dbBackup';
+import { useSettings } from './hooks/useSettings';
 import KanbanBoard from './components/KanbanBoard';
 import ProjectsView from './components/ProjectsView';
 import ProjectDetail from './components/ProjectDetail';
@@ -18,6 +20,13 @@ const NAV_ITEMS: { view: View; label: string; icon: React.ReactNode }[] = [
 
 export default function App() {
   usePersistence();
+  const settings = useSettings();
+
+  // Theme via CSS-Variablen auf <html> anwenden
+  useEffect(() => {
+    document.documentElement.dataset.accent = settings.accentColor ?? 'blue';
+    document.documentElement.dataset.bg = settings.bgStyle ?? 'light';
+  }, [settings.accentColor, settings.bgStyle]);
 
   const {
     activeView,
@@ -102,7 +111,7 @@ export default function App() {
       </aside>
 
       {/* ── Main Content ── */}
-      <main className="flex-1 overflow-auto p-8">
+      <main className="flex-1 overflow-auto p-8" style={{ backgroundColor: 'rgb(var(--bg-main))' }}>
         <div className="max-w-6xl w-full mx-auto flex flex-col flex-1 min-h-0">
           {activeView === 'dashboard' && (
             <div className="flex flex-col h-[calc(100vh-4rem)]">

@@ -3,18 +3,14 @@ import type { DragEndEvent } from '@dnd-kit/core';
 import { db, type Todo } from '../db/db';
 import { useStore } from '../store/useStore';
 
-export type KanbanStatus = 'backlog' | 'backlog-low' | 'doing' | 'done' | 'archived';
+export type KanbanStatus = 'today' | 'backlog' | 'doing' | 'done' | 'archived';
 
 export interface TodoWithProject extends Todo {
   projectTitle?: string;
   projectColor?: string;
 }
 
-const ALL_STATUSES: KanbanStatus[] = ['backlog', 'backlog-low', 'doing', 'done', 'archived'];
-
-function getToday(): string {
-  return new Date().toISOString().split('T')[0];
-}
+const DROPPABLE_STATUSES: KanbanStatus[] = ['today', 'backlog', 'doing', 'done', 'archived'];
 
 export function useKanbanLogic() {
   const filterProjectId = useStore((s) => s.filterProjectId);
@@ -22,10 +18,10 @@ export function useKanbanLogic() {
   const todos = useLiveQuery(() => db.todos.toArray(), []);
   const projects = useLiveQuery(() => db.projects.toArray(), []);
 
-  const todosWithProject: TodoWithProject[] = (todos ?? [])
+  const filtered: TodoWithProject[] = (todos ?? [])
     .filter((t) => {
-      if (filterProjectId === null) return true;      // alle
-      if (filterProjectId === 0) return !t.projectId; // kein Projekt
+      if (filterProjectId === null) return true;
+      if (filterProjectId === 0) return !t.projectId;
       return t.projectId === filterProjectId;
     })
     .map((todo) => {
@@ -33,12 +29,13 @@ export function useKanbanLogic() {
       return { ...todo, projectTitle: proj?.title, projectColor: proj?.color };
     });
 
+  // Spalten direkt aus gespeichertem Status – keine virtuelle Berechnung mehr
   const columns: Record<KanbanStatus, TodoWithProject[]> = {
-    backlog: todosWithProject.filter((t) => t.status === 'backlog'),
-    'backlog-low': todosWithProject.filter((t) => t.status === 'backlog-low'),
-    doing: todosWithProject.filter((t) => t.status === 'doing'),
-    done: todosWithProject.filter((t) => t.status === 'done'),
-    archived: todosWithProject.filter((t) => t.status === 'archived'),
+    today:    filtered.filter((t) => t.status === 'today'),
+    backlog:  filtered.filter((t) => t.status === 'backlog'),
+    doing:    filtered.filter((t) => t.status === 'doing'),
+    done:     filtered.filter((t) => t.status === 'done'),
+    archived: filtered.filter((t) => t.status === 'archived'),
   };
 
   async function handleDragEnd(event: DragEndEvent) {
@@ -48,20 +45,15 @@ export function useKanbanLogic() {
     const todoId = active.id as number;
     const newStatus = over.id as KanbanStatus;
 
-    if (!ALL_STATUSES.includes(newStatus)) return;
+    if (!DROPPABLE_STATUSES.includes(newStatus)) return;
 
     const todo = todos?.find((t) => t.id === todoId);
-    if (!todo || todo.status === newStatus) return;
+    if (!todo) return;
+    if (todo.status === newStatus) return;
 
+    // lastAutoScheduledDate bleibt erhalten – verhindert, dass ein in backlog
+    // zurückgeschobenes Todo noch heute erneut nach "Heute" wandert
     await db.todos.update(todoId, { status: newStatus });
-
-    if (newStatus === 'done') {
-      const today = getToday();
-      const dependents = await db.todos.where('startAfterId').equals(todoId).toArray();
-      for (const dep of dependents) {
-        await db.todos.update(dep.id!, { startDate: today });
-      }
-    }
   }
 
   return { columns, handleDragEnd, projects: projects ?? [] };

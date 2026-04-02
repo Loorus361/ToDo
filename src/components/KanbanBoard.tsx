@@ -8,37 +8,41 @@ import {
   useDraggable,
   type DragStartEvent,
 } from '@dnd-kit/core';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { clsx } from 'clsx';
-import { Plus, Check, Archive, Eye, EyeOff, Trash2 } from 'lucide-react';
+import { Plus, Check, Archive, Eye, EyeOff, Trash2, Star, RefreshCw } from 'lucide-react';
 import { useKanbanLogic, type KanbanStatus, type TodoWithProject } from '../hooks/useKanbanLogic';
 import { TodoDetailModal } from './TodoDetailModal';
 import { useStore } from '../store/useStore';
 import { useSettings } from '../hooks/useSettings';
-import { db } from '../db/db';
+import { db, autoScheduleTodayTodos } from '../db/db';
 import { getProjectColor } from '../utils/projectColors';
 import { getDeadlineStatus, deadlineTextClass } from '../utils/deadlineColors';
 
 const COLUMN_LABELS: Record<KanbanStatus, string> = {
-  backlog: 'Backlog',
-  'backlog-low': 'Backlog ohne Prio',
-  doing: 'In Arbeit',
-  done: 'Erledigt',
+  today:    'Heute zur Bearbeitung',
+  backlog:  'Backlog',
+  doing:    'In Arbeit',
+  done:     'Erledigt',
   archived: 'Archiviert',
 };
 
 const COLUMN_ACCENT: Record<KanbanStatus, string> = {
-  backlog: 'bg-gray-400',
-  'backlog-low': 'bg-gray-300',
-  doing: 'bg-yellow-400',
-  done: 'bg-green-500',
+  today:    'bg-orange-400',
+  backlog:  'bg-gray-400',
+  doing:    'bg-yellow-400',
+  done:     'bg-green-500',
   archived: 'bg-gray-200',
 };
 
-const ACTIVE_COLUMNS: KanbanStatus[] = ['backlog', 'backlog-low', 'doing', 'done'];
+const ACTIVE_COLUMNS: KanbanStatus[] = ['backlog', 'today', 'doing', 'done'];
 
 // ─── Add-Todo-Formular ────────────────────────────────────────────────────────
-function AddTodoForm({ projects, onClose }: { projects: { id?: number; title: string }[]; onClose: () => void }) {
+function AddTodoForm({ projects, defaultStatus, onClose }: {
+  projects: { id?: number; title: string }[];
+  defaultStatus: 'backlog' | 'doing';
+  onClose: () => void;
+}) {
   const [title, setTitle] = useState('');
   const [projectId, setProjectId] = useState('');
   const [deadline, setDeadline] = useState('');
@@ -46,7 +50,12 @@ function AddTodoForm({ projects, onClose }: { projects: { id?: number; title: st
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
-    await db.todos.add({ title: title.trim(), status: 'backlog', projectId: projectId ? Number(projectId) : undefined, deadline: deadline || undefined });
+    await db.todos.add({
+      title: title.trim(),
+      status: defaultStatus,
+      projectId: projectId ? Number(projectId) : undefined,
+      deadline: deadline || undefined,
+    });
     setTitle('');
     setProjectId('');
     setDeadline('');
@@ -120,7 +129,10 @@ function TodoCard({
       )}
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="text-sm font-medium text-gray-900 leading-snug flex-1 min-w-0">{todo.title}</p>
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          {todo.prio && <Star size={11} className="text-amber-400 fill-amber-400 flex-shrink-0" />}
+          <p className="text-sm font-medium text-gray-900 leading-snug min-w-0">{todo.title}</p>
+        </div>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
           {todo.status !== 'done' && (
             <button onClick={handleDone} className="p-1 rounded text-gray-300 hover:text-green-500 hover:bg-green-50 transition-colors" title="Erledigt">
@@ -178,6 +190,7 @@ function KanbanColumn({ status, todos, onOpenTodo, redDays, yellowDays }: {
   redDays: number; yellowDays: number;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
+  const isToday = status === 'today';
   return (
     <div className="flex flex-col flex-1 min-w-0">
       <div className="flex items-center gap-2 mb-3">
@@ -187,7 +200,9 @@ function KanbanColumn({ status, todos, onOpenTodo, redDays, yellowDays }: {
       </div>
       <div ref={setNodeRef}
         className={clsx('flex-1 flex flex-col gap-2 min-h-32 rounded-xl p-2 transition-colors',
-          isOver ? 'bg-primary-50 border border-primary-200' : 'bg-gray-50')}>
+          isOver ? 'bg-primary-50 border border-primary-200' : 'bg-gray-50',
+          isToday && !isOver && 'border border-dashed border-orange-200 bg-orange-50/30'
+        )}>
         {todos.map((todo) => (
           <DraggableTodoCard key={todo.id} todo={todo} onOpen={() => onOpenTodo(todo.id!)} redDays={redDays} yellowDays={yellowDays} />
         ))}
@@ -205,17 +220,26 @@ export default function KanbanBoard() {
   const [activeId, setActiveId] = useState<number | null>(null);
   const [openTodoId, setOpenTodoId] = useState<number | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const activeTodo = activeId != null ? Object.values(columns).flat().find((t) => t.id === activeId) : null;
 
+  // Beim ersten Laden fällige Backlog-Todos automatisch in "Heute" einplanen
+  useEffect(() => { autoScheduleTodayTodos(); }, []);
+
   function handleDragStart(event: DragStartEvent) { setActiveId(event.active.id as number); }
   function onDragEnd(event: Parameters<typeof handleDragEnd>[0]) { setActiveId(null); handleDragEnd(event); }
+
+  async function handleRefresh() {
+    await autoScheduleTodayTodos();
+    setRefreshKey((k) => k + 1);
+  }
 
   const visibleColumns: KanbanStatus[] = showArchived ? [...ACTIVE_COLUMNS, 'archived'] : ACTIVE_COLUMNS;
 
   return (
-    <div className="flex flex-col h-full gap-4">
+    <div className="flex flex-col h-full gap-4" key={refreshKey}>
       {/* Board-Header */}
       <div className="flex items-center gap-3 flex-wrap">
         <button onClick={() => setShowAddForm((v) => !v)}
@@ -223,7 +247,6 @@ export default function KanbanBoard() {
           <Plus size={15} />To-Do hinzufügen
         </button>
 
-        {/* Projekt-Filter inkl. "Kein Projekt" */}
         <select
           value={filterProjectId ?? ''}
           onChange={(e) => {
@@ -243,9 +266,22 @@ export default function KanbanBoard() {
           {showArchived ? <Eye size={14} /> : <EyeOff size={14} />}
           Archiviert
         </button>
+
+        <button onClick={handleRefresh}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-600 transition-colors ml-auto"
+          title="Heute-Spalte aktualisieren">
+          <RefreshCw size={14} />
+          Aktualisieren
+        </button>
       </div>
 
-      {showAddForm && <AddTodoForm projects={projects} onClose={() => setShowAddForm(false)} />}
+      {showAddForm && (
+        <AddTodoForm
+          projects={projects}
+          defaultStatus={settings.defaultTodoStatus ?? 'backlog'}
+          onClose={() => setShowAddForm(false)}
+        />
+      )}
 
       {/* Kanban */}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={onDragEnd}>
