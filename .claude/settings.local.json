@@ -23,7 +23,8 @@
       "Bash(git push:*)",
       "Bash(npx tsc:*)",
       "Bash(export PATH=\"/usr/local/bin:/opt/homebrew/bin:$PATH\")",
-      "Bash(ls ~/.nvm/versions/node/*/bin/node)"
+      "Bash(ls ~/.nvm/versions/node/*/bin/node)",
+      "Bash(export PATH=\"/usr/local/bin:$PATH\")"
     ]
   }
 }
