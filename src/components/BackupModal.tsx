@@ -13,6 +13,7 @@ export function BackupModal({ isReminder = false, onClose }: Props) {
   const setIsDirty = useStore((s) => s.setIsDirty);
   const [importing, setImporting] = useState(false);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
   // ESC schließt das Modal
@@ -43,14 +44,15 @@ export function BackupModal({ isReminder = false, onClose }: Props) {
       return;
     }
     setImporting(true);
-    const ok = await importDatabase(file);
+    const result = await importDatabase(file);
     setImporting(false);
     e.target.value = '';
-    if (ok) {
+    if (result.success) {
       setIsDirty(false);
       setStatus('success');
       setTimeout(onClose, 1200);
     } else {
+      setErrorMsg(result.error ?? 'Import fehlgeschlagen.');
       setStatus('error');
     }
   }
@@ -125,9 +127,10 @@ export function BackupModal({ isReminder = false, onClose }: Props) {
           <p className="text-sm text-green-600 text-center py-2">✓ Erfolgreich abgeschlossen.</p>
         )}
         {status === 'error' && (
-          <p className="text-sm text-red-500 text-center py-2">
-            Fehler aufgetreten. Bitte in der Konsole prüfen.
-          </p>
+          <div className="text-center py-2">
+            <p className="text-sm text-red-500">Fehler beim Import.</p>
+            {errorMsg && <p className="text-xs text-red-400 mt-1">{errorMsg}</p>}
+          </div>
         )}
       </div>
     </div>
