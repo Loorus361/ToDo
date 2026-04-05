@@ -17,13 +17,13 @@ interface Kampagne {
   t0Month: number; // 0-basiert (JS Date)
 }
 
-const HALF_COL_WIDTH = 48; // px pro Halbmonat
+const HALF_COL_WIDTH = 48; // px pro Monatsviertel
 const LABEL_WIDTH = 120;
 const MONTH_NAMES = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
 
-// Konvertiert (year, month) zu einem absoluten Halbmonats-Index
+// Konvertiert (year, month) zu einem absoluten Viertelmonats-Index
 function toAbsHalf(year: number, month: number): number {
-  return (year * 12 + month) * 2;
+  return (year * 12 + month) * 4;
 }
 
 function getMaxLayers(blocks: StationBlock[]): number {
@@ -76,10 +76,10 @@ export default function AusbildungsverlaufView() {
     }
 
     const total = maxHalf - minHalf;
-    const totalMonths = Math.ceil(total / 2);
+    const totalMonths = Math.ceil(total / 4);
 
     const monthLabels: { label: string; absMonth: number }[] = [];
-    const startAbsMonth = Math.floor(minHalf / 2);
+    const startAbsMonth = Math.floor(minHalf / 4);
     for (let i = 0; i < totalMonths; i++) {
       const absMonth = startAbsMonth + i;
       const year = Math.floor(absMonth / 12);
@@ -97,8 +97,9 @@ export default function AusbildungsverlaufView() {
   const layerCount = getMaxLayers(AUSBILDUNGS_BLOECKE);
   const currentAbsHalf = useMemo(() => {
     const now = new Date();
-    const halfInMonth = now.getDate() <= 15 ? 0 : 1;
-    return (now.getFullYear() * 12 + now.getMonth()) * 2 + halfInMonth;
+    const day = now.getDate();
+    const quarterInMonth = day <= 7 ? 0 : day <= 15 ? 1 : day <= 23 ? 2 : 3;
+    return (now.getFullYear() * 12 + now.getMonth()) * 4 + quarterInMonth;
   }, []);
   const currentHalfOffset = currentAbsHalf - globalStartHalf;
   const showCurrentMarker = currentHalfOffset >= 0 && currentHalfOffset <= totalHalves;
@@ -187,7 +188,7 @@ export default function AusbildungsverlaufView() {
                       'text-xs text-gray-500 text-center border-r border-gray-100 flex-shrink-0 py-2 font-medium',
                       i % 2 === 0 ? 'bg-gray-50/50' : ''
                     )}
-                    style={{ width: HALF_COL_WIDTH * 2 }}
+                    style={{ width: HALF_COL_WIDTH * 4 }}
                   >
                     {m.label}
                   </div>
@@ -195,14 +196,14 @@ export default function AusbildungsverlaufView() {
               </div>
               {/* Halbmonats-Unterteilung */}
               <div className="flex" style={{ paddingLeft: LABEL_WIDTH }}>
-                {Array.from({ length: totalHalves }, (_, i) => (
+                {Array.from({ length: Math.ceil(totalHalves / 2) }, (_, i) => (
                   <div
                     key={i}
                     className={clsx(
                       'text-[10px] text-gray-400 text-center border-r flex-shrink-0 py-0.5',
                       i % 2 === 0 ? 'border-gray-200' : 'border-gray-100'
                     )}
-                    style={{ width: HALF_COL_WIDTH }}
+                    style={{ width: HALF_COL_WIDTH * 2 }}
                   >
                     {i % 2 === 0 ? '1.–15.' : '16.–31.'}
                   </div>
@@ -293,10 +294,10 @@ function KampagneRow({
             const isHovered = hoveredBlock === block;
 
             // Absolutes Datum für Tooltip berechnen
-            const startMonth = kampagne.t0Month + Math.floor(block.startHalf / 2);
+            const startMonth = kampagne.t0Month + Math.floor(block.startHalf / 4);
             const startYear = kampagne.t0Year + Math.floor(startMonth / 12);
             const startM = startMonth % 12;
-            const endMonth = kampagne.t0Month + Math.floor((block.endHalf - 1) / 2);
+            const endMonth = kampagne.t0Month + Math.floor((block.endHalf - 1) / 4);
             const endYear = kampagne.t0Year + Math.floor(endMonth / 12);
             const endM = endMonth % 12;
 

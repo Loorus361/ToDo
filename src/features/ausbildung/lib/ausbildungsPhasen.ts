@@ -1,7 +1,7 @@
 export interface StationBlock {
   label: string;
   phase: string;
-  startHalf: number; // 0-basiert, in Halbmonaten ab T0 (0 = erste Hälfte Monat 1)
+  startHalf: number; // 0-basiert, in Viertelmonaten ab T0
   endHalf: number;
   type: 'abschnitt' | 'station' | 'ag' | 'klku' | 'pruefung' ;
   layer: number; // 0 = Hauptlayer, 1+ = überlagernde Layer
@@ -18,59 +18,59 @@ export const PHASE_COLORS: Record<string, { bg: string; border: string; text: st
   ag:              { bg: '#e0e7ff', border: '#6366f1', text: '#3730a3' },
 };
 
-// Halbmonat-Konvention: Monat 1 erste Hälfte = 0, Monat 1 zweite Hälfte = 1, Monat 2 erste = 2, ...
-// Monat M erste Hälfte = (M-1)*2, zweite Hälfte = (M-1)*2 + 1
+// Viertelmonat-Konvention: Monat 1 = 0..3, Monat 2 = 4..7, ...
+// Monat M erstes Viertel = (M-1)*4
 
 export const AUSBILDUNGS_BLOECKE: StationBlock[] = [
   // Phase 1 – Zivilrecht
-  { label: 'ELZ',       phase: 'zivilrecht', startHalf: 0,  endHalf: 2,  type: 'ag', layer: 1 },
-  { label: 'PZ',       phase: 'zivilrecht', startHalf: 2,  endHalf: 8,  type: 'ag', layer: 1 },
-  { label: 'Zivilgericht (AG oder LG)',       phase: 'zivilrecht', startHalf: 2,  endHalf: 8,  type: 'station', layer: 0 },
+  { label: 'ELZ',       phase: 'zivilrecht', startHalf: 0,  endHalf: 4,  type: 'ag', layer: 1 },
+  { label: 'PZ',       phase: 'zivilrecht', startHalf: 4,  endHalf: 16,  type: 'ag', layer: 1 },
+  { label: 'Zivilgericht (AG oder LG)',       phase: 'zivilrecht', startHalf: 4,  endHalf: 16,  type: 'station', layer: 0 },
 
   // Phase 2 – Strafrecht
-  { label: 'ELS',       phase: 'strafrecht', startHalf: 8,  endHalf: 9,  type: 'ag', layer: 1 },
-  { label: 'PS',        phase: 'strafrecht', startHalf: 9,  endHalf: 15, type: 'ag',  layer: 1 },
-  { label: 'Staatsanwaltschaft',       phase: 'strafrecht', startHalf: 9,  endHalf: 15,  type: 'station', layer: 0 },
+  { label: 'ELS',       phase: 'strafrecht', startHalf: 16,  endHalf: 18,  type: 'ag', layer: 1 },
+  { label: 'PS',        phase: 'strafrecht', startHalf: 18,  endHalf: 30, type: 'ag',  layer: 1 },
+  { label: 'Staatsanwaltschaft',       phase: 'strafrecht', startHalf: 18,  endHalf: 30,  type: 'station', layer: 0 },
 
   // Phase 3 – Verwaltungsrecht
-  { label: 'ELV',       phase: 'verwaltung', startHalf: 15,  endHalf: 16,  type: 'ag', layer: 1 },
-  { label: 'PV',        phase: 'verwaltung', startHalf: 16,  endHalf: 22, type: 'ag',  layer: 1 },
-  { label: 'Behörde',       phase: 'verwaltung', startHalf: 16,  endHalf: 22,  type: 'station', layer: 0 },
+  { label: 'ELV',       phase: 'verwaltung', startHalf: 30,  endHalf: 32,  type: 'ag', layer: 1 },
+  { label: 'PV',        phase: 'verwaltung', startHalf: 32,  endHalf: 44, type: 'ag',  layer: 1 },
+  { label: 'Behörde',       phase: 'verwaltung', startHalf: 32,  endHalf: 44,  type: 'station', layer: 0 },
 
   // Phase 4 – Anwaltsstation
-  { label: 'ELZ',           phase: 'anwalt',  startHalf: 22,  endHalf: 23,  type: 'ag',         layer: 1 },
-  { label: 'RAZ',           phase: 'anwalt',  startHalf: 23,  endHalf: 25,  type: 'ag',         layer: 1 },
-  { label: 'ELS',           phase: 'anwalt',  startHalf: 25,  endHalf: 26,  type: 'ag',         layer: 1 },
-  { label: 'RAS',           phase: 'anwalt',  startHalf: 26,  endHalf: 29,  type: 'ag',         layer: 1 },
-  { label: 'ELV',           phase: 'anwalt',  startHalf: 29,  endHalf: 30,  type: 'ag',         layer: 1 },
-  { label: 'RAV',           phase: 'anwalt',  startHalf: 30,  endHalf: 32,  type: 'ag',         layer: 1 },
-  { label: 'Rechtsanwalt u.a.',       phase: 'anwalt', startHalf: 22,  endHalf: 40,  type: 'station', layer: 0 },
+  { label: 'ELZ',           phase: 'anwalt',  startHalf: 44,  endHalf: 46,  type: 'ag',         layer: 1 },
+  { label: 'RAZ',           phase: 'anwalt',  startHalf: 46,  endHalf: 50,  type: 'ag',         layer: 1 },
+  { label: 'ELS',           phase: 'anwalt',  startHalf: 50,  endHalf: 52,  type: 'ag',         layer: 1 },
+  { label: 'RAS',           phase: 'anwalt',  startHalf: 52,  endHalf: 58,  type: 'ag',         layer: 1 },
+  { label: 'ELV',           phase: 'anwalt',  startHalf: 58,  endHalf: 60,  type: 'ag',         layer: 1 },
+  { label: 'RAV',           phase: 'anwalt',  startHalf: 60,  endHalf: 64,  type: 'ag',         layer: 1 },
+  { label: 'Rechtsanwalt u.a.',       phase: 'anwalt', startHalf: 44,  endHalf: 80,  type: 'station', layer: 0 },
 
   // Phase 5 - Pflicht Klausurenkurs
-  { label: 'KlKu',            phase: 'ag',  startHalf: 32,  endHalf: 38,  type: 'klku',       layer: 1 },
-  { label: 'I ',              phase: 'ag',  startHalf: 32,  endHalf: 33,  type: 'klku',       layer: 2 },
-  { label: 'Besprechung I ',  phase: 'ag',  startHalf: 33,  endHalf: 34,  type: 'klku',       layer: 2 },
-  { label: 'II ',             phase: 'ag',  startHalf: 34,  endHalf: 35,  type: 'klku',       layer: 2 },
-  { label: 'Besprechung II ', phase: 'ag',  startHalf: 35,  endHalf: 38,  type: 'klku',       layer: 2 },
+  { label: 'KlKu',            phase: 'ag',  startHalf: 64,  endHalf: 76,  type: 'klku',       layer: 1 },
+  { label: 'I ',              phase: 'ag',  startHalf: 64,  endHalf: 66,  type: 'klku',       layer: 2 },
+  { label: 'Besprechung I ',  phase: 'ag',  startHalf: 66,  endHalf: 68,  type: 'klku',       layer: 2 },
+  { label: 'II ',             phase: 'ag',  startHalf: 68,  endHalf: 70,  type: 'klku',       layer: 2 },
+  { label: 'Besprechung II ', phase: 'ag',  startHalf: 70,  endHalf: 76,  type: 'klku',       layer: 2 },
 
   // Schriftliches Examen (Monat 20)
-  { label: 'Schriftl. Examen',    phase: 'pruefung',   startHalf: 38, endHalf: 39, type: 'pruefung', layer: 1 },
+  { label: 'Schriftl. Examen',    phase: 'pruefung',   startHalf: 76, endHalf: 78, type: 'pruefung', layer: 1 },
 
   // Phase 6 – Wahlstation
-  { label: 'Wahlstation', phase: 'wahlstation', startHalf: 40,  endHalf: 48,  type: 'station',  layer: 0 }, 
-  { label: 'AVL',         phase: 'ag',    startHalf: 46,  endHalf: 48,  type: 'klku',       layer: 1 },
+  { label: 'Wahlstation', phase: 'wahlstation', startHalf: 80,  endHalf: 96,  type: 'station',  layer: 0 }, 
+  { label: 'AVL',         phase: 'ag',    startHalf: 92,  endHalf: 96,  type: 'klku',       layer: 1 },
 
   // Phase 7 – Mündliche Prüfung
-  { label: 'Mündl. Examen',      phase: 'pruefung',   startHalf: 48, endHalf: 50, type: 'pruefung', layer: 1 },
+  { label: 'Mündl. Examen',      phase: 'pruefung',   startHalf: 96, endHalf: 100, type: 'pruefung', layer: 1 },
 ];
 
 export const KAMPAGNE_MONATE = [1, 4, 7, 10] as const; // Feb=1(0-idx), Mai=4, Aug=7, Nov=10
 export const KAMPAGNE_LABELS = ['Februar', 'Mai', 'August', 'November'] as const;
 
-export const TOTAL_HALF_MONTHS = 50; // 25 Monate × 2
+export const TOTAL_HALF_MONTHS = 100; // 25 Monate × 4
 
 export function getMonthLabel(t0Year: number, t0Month: number, halfIndex: number): string {
-  const monthOffset = Math.floor(halfIndex / 2);
+  const monthOffset = Math.floor(halfIndex / 4);
   const date = new Date(t0Year, t0Month + monthOffset, 1);
   const monthNames = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
   return `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
