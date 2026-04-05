@@ -35,6 +35,15 @@ function getMaxLayers(blocks: StationBlock[]): number {
   return Math.max(...blocks.map(b => b.layer)) + 1;
 }
 
+function sortKampagnenByStart(items: Kampagne[]): Kampagne[] {
+  return [...items].sort((a, b) => {
+    const aStart = toAbsHalf(a.t0Year, a.t0Month);
+    const bStart = toAbsHalf(b.t0Year, b.t0Month);
+    if (aStart !== bStart) return aStart - bStart;
+    return a.label.localeCompare(b.label);
+  });
+}
+
 export default function AusbildungsverlaufView() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [kampagnen, setKampagnen] = useState<Kampagne[]>(() => {
@@ -57,12 +66,13 @@ export default function AusbildungsverlaufView() {
   const [addYear, setAddYear] = useState(new Date().getFullYear());
   const [addMonthIdx, setAddMonthIdx] = useState(0);
   const [scale, setScale] = useState<ScaleOption>('mittel');
+  const sortedKampagnen = useMemo(() => sortKampagnenByStart(kampagnen), [kampagnen]);
 
   function addKampagne() {
     const m = KAMPAGNE_MONATE[addMonthIdx];
     const label = `${KAMPAGNE_LABELS[addMonthIdx]} ${addYear}`;
     if (kampagnen.some(k => k.t0Year === addYear && k.t0Month === m)) return;
-    setKampagnen(prev => [...prev, { id: `k-${Date.now()}`, label, t0Year: addYear, t0Month: m }]);
+    setKampagnen(prev => sortKampagnenByStart([...prev, { id: `k-${Date.now()}`, label, t0Year: addYear, t0Month: m }]));
   }
 
   function removeKampagne(id: string) {
@@ -71,11 +81,11 @@ export default function AusbildungsverlaufView() {
 
   // Berechne den globalen Zeitraum (frühester Start bis spätestes Ende)
   const { globalStartHalf, totalHalves, months } = useMemo(() => {
-    if (kampagnen.length === 0) return { globalStartHalf: 0, totalHalves: 0, months: [] };
+    if (sortedKampagnen.length === 0) return { globalStartHalf: 0, totalHalves: 0, months: [] };
 
     let minHalf = Infinity;
     let maxHalf = -Infinity;
-    for (const k of kampagnen) {
+    for (const k of sortedKampagnen) {
       const kStart = toAbsHalf(k.t0Year, k.t0Month);
       minHalf = Math.min(minHalf, kStart);
       maxHalf = Math.max(maxHalf, kStart + TOTAL_HALF_MONTHS);
@@ -97,7 +107,7 @@ export default function AusbildungsverlaufView() {
     }
 
     return { globalStartHalf: minHalf, totalHalves: total, months: monthLabels };
-  }, [kampagnen]);
+  }, [sortedKampagnen]);
 
   const halfColWidth = WIDTH_BY_SCALE[scale];
   const totalWidth = totalHalves * halfColWidth;
@@ -185,7 +195,7 @@ export default function AusbildungsverlaufView() {
         ref={scrollRef}
         className="flex-1 overflow-auto border border-gray-200 rounded-lg bg-white"
       >
-        {kampagnen.length === 0 ? (
+        {sortedKampagnen.length === 0 ? (
           <div className="flex items-center justify-center py-16 text-gray-400 text-sm">
             Füge eine Kampagne hinzu, um den Ausbildungsverlauf zu sehen.
           </div>
@@ -235,7 +245,7 @@ export default function AusbildungsverlaufView() {
             </div>
 
             {/* Kampagnen-Zeilen */}
-            {kampagnen.map((kampagne) => (
+            {sortedKampagnen.map((kampagne) => (
               <KampagneRow
                 key={kampagne.id}
                 kampagne={kampagne}
@@ -283,7 +293,7 @@ function KampagneRow({
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm font-medium text-gray-900">{kampagne.label}</div>
-              <div className="text-[10px] text-gray-400">25 Monate</div>
+               {/* <div className="text-[10px] text-gray-400">25 Monate</div> */ }
             </div>
             <button
               onClick={onRemove}
