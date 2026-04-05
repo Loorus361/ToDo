@@ -38,12 +38,12 @@ export const AUSBILDUNGS_BLOECKE: StationBlock[] = [
   { label: 'Behörde',       phase: 'verwaltung', startHalf: 32,  endHalf: 44,  type: 'station', layer: 0 },
 
   // Phase 4 – Anwaltsstation
-  { label: 'ELZ',           phase: 'anwalt',  startHalf: 44,  endHalf: 46,  type: 'ag',         layer: 1 },
-  { label: 'RAZ',           phase: 'anwalt',  startHalf: 46,  endHalf: 50,  type: 'ag',         layer: 1 },
-  { label: 'ELS',           phase: 'anwalt',  startHalf: 50,  endHalf: 52,  type: 'ag',         layer: 1 },
-  { label: 'RAS',           phase: 'anwalt',  startHalf: 52,  endHalf: 58,  type: 'ag',         layer: 1 },
-  { label: 'ELV',           phase: 'anwalt',  startHalf: 58,  endHalf: 60,  type: 'ag',         layer: 1 },
-  { label: 'RAV',           phase: 'anwalt',  startHalf: 60,  endHalf: 64,  type: 'ag',         layer: 1 },
+  { label: 'ELZ',           phase: 'anwalt',  startHalf: 44,  endHalf: 45,  type: 'ag',         layer: 1 },
+  { label: 'RAZ',           phase: 'anwalt',  startHalf: 45,  endHalf: 50,  type: 'ag',         layer: 1 },
+  { label: 'ELS',           phase: 'anwalt',  startHalf: 50,  endHalf: 51,  type: 'ag',         layer: 1 },
+  { label: 'RAS',           phase: 'anwalt',  startHalf: 51,  endHalf: 58,  type: 'ag',         layer: 1 },
+  { label: 'ELV',           phase: 'anwalt',  startHalf: 58,  endHalf: 59,  type: 'ag',         layer: 1 },
+  { label: 'RAV',           phase: 'anwalt',  startHalf: 59,  endHalf: 64,  type: 'ag',         layer: 1 },
   { label: 'Rechtsanwalt u.a.',       phase: 'anwalt', startHalf: 44,  endHalf: 80,  type: 'station', layer: 0 },
 
   // Phase 5 - Pflicht Klausurenkurs

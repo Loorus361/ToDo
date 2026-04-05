@@ -17,9 +17,14 @@ interface Kampagne {
   t0Month: number; // 0-basiert (JS Date)
 }
 
-const HALF_COL_WIDTH = 48; // px pro Monatsviertel
 const LABEL_WIDTH = 120;
 const MONTH_NAMES = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+const WIDTH_BY_SCALE = {
+  schmal: 36,
+  mittel: 48,
+  breit: 64,
+} as const;
+type ScaleOption = keyof typeof WIDTH_BY_SCALE;
 
 // Konvertiert (year, month) zu einem absoluten Viertelmonats-Index
 function toAbsHalf(year: number, month: number): number {
@@ -51,6 +56,7 @@ export default function AusbildungsverlaufView() {
   });
   const [addYear, setAddYear] = useState(new Date().getFullYear());
   const [addMonthIdx, setAddMonthIdx] = useState(0);
+  const [scale, setScale] = useState<ScaleOption>('mittel');
 
   function addKampagne() {
     const m = KAMPAGNE_MONATE[addMonthIdx];
@@ -93,7 +99,8 @@ export default function AusbildungsverlaufView() {
     return { globalStartHalf: minHalf, totalHalves: total, months: monthLabels };
   }, [kampagnen]);
 
-  const totalWidth = totalHalves * HALF_COL_WIDTH;
+  const halfColWidth = WIDTH_BY_SCALE[scale];
+  const totalWidth = totalHalves * halfColWidth;
   const layerCount = getMaxLayers(AUSBILDUNGS_BLOECKE);
   const currentAbsHalf = useMemo(() => {
     const now = new Date();
@@ -143,18 +150,34 @@ export default function AusbildungsverlaufView() {
       </div>
 
       {/* Legende */}
-      <div className="flex flex-wrap gap-3 mb-4">
-        {Object.entries(PHASE_COLORS).map(([phase, colors]) => (
-          <div key={phase} className="flex items-center gap-1.5">
-            <div
-              className="w-3 h-3 rounded-sm border"
-              style={{ backgroundColor: colors.bg, borderColor: colors.border }}
-            />
-            <span className="text-xs text-gray-600 capitalize">
-              {phase === 'ag' ? 'Arbeitsgemeinschaft' : phase === 'pruefung' ? 'Prüfung' : phase}
-            </span>
-          </div>
-        ))}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div className="flex flex-wrap gap-3">
+          {Object.entries(PHASE_COLORS).map(([phase, colors]) => (
+            <div key={phase} className="flex items-center gap-1.5">
+              <div
+                className="w-3 h-3 rounded-sm border"
+                style={{ backgroundColor: colors.bg, borderColor: colors.border }}
+              />
+              <span className="text-xs text-gray-600 capitalize">
+                {phase === 'ag' ? 'Arbeitsgemeinschaft' : phase === 'pruefung' ? 'Prüfung' : phase}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div className="ml-auto flex items-center gap-2">
+          <label htmlFor="scale-select" className="text-xs font-medium text-gray-500">Skalierung</label>
+          <select
+            id="scale-select"
+            value={scale}
+            onChange={(e) => setScale(e.target.value as ScaleOption)}
+            className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-white text-gray-700"
+          >
+            <option value="schmal">Schmal</option>
+            <option value="mittel">Mittel</option>
+            <option value="breit">Breit</option>
+          </select>
+        </div>
       </div>
 
       {/* Timeline */}
@@ -172,7 +195,7 @@ export default function AusbildungsverlaufView() {
               <div
                 aria-label="Aktuelles Datum"
                 className="absolute top-0 bottom-0 pointer-events-none z-30"
-                style={{ left: LABEL_WIDTH + currentHalfOffset * HALF_COL_WIDTH }}
+                style={{ left: LABEL_WIDTH + currentHalfOffset * halfColWidth }}
               >
                 <div className="h-full border-l-2 border-red-500" />
               </div>
@@ -188,7 +211,7 @@ export default function AusbildungsverlaufView() {
                       'text-xs text-gray-500 text-center border-r border-gray-100 flex-shrink-0 py-2 font-medium',
                       i % 2 === 0 ? 'bg-gray-50/50' : ''
                     )}
-                    style={{ width: HALF_COL_WIDTH * 4 }}
+                    style={{ width: halfColWidth * 4 }}
                   >
                     {m.label}
                   </div>
@@ -203,7 +226,7 @@ export default function AusbildungsverlaufView() {
                       'text-[10px] text-gray-400 text-center border-r flex-shrink-0 py-0.5',
                       i % 2 === 0 ? 'border-gray-200' : 'border-gray-100'
                     )}
-                    style={{ width: HALF_COL_WIDTH * 2 }}
+                    style={{ width: halfColWidth * 2 }}
                   >
                     {i % 2 === 0 ? '1.–15.' : '16.–31.'}
                   </div>
@@ -219,6 +242,7 @@ export default function AusbildungsverlaufView() {
                 globalStartHalf={globalStartHalf}
                 totalHalves={totalHalves}
                 layerCount={layerCount}
+                halfColWidth={halfColWidth}
                 onRemove={() => removeKampagne(kampagne.id)}
               />
             ))}
@@ -234,12 +258,14 @@ function KampagneRow({
   globalStartHalf,
   totalHalves,
   layerCount,
+  halfColWidth,
   onRemove,
 }: {
   kampagne: Kampagne;
   globalStartHalf: number;
   totalHalves: number;
   layerCount: number;
+  halfColWidth: number;
   onRemove: () => void;
 }) {
   const [hoveredBlock, setHoveredBlock] = useState<StationBlock | null>(null);
@@ -280,7 +306,7 @@ function KampagneRow({
                   'border-r flex-shrink-0 h-full',
                   i % 2 === 0 ? 'border-gray-200 bg-gray-50/30' : 'border-gray-100'
                 )}
-                style={{ width: HALF_COL_WIDTH }}
+                style={{ width: halfColWidth }}
               />
             ))}
           </div>
@@ -288,8 +314,8 @@ function KampagneRow({
           {/* Station-Blöcke (verschoben um Kampagne-Offset) */}
           {AUSBILDUNGS_BLOECKE.map((block, idx) => {
             const colors = PHASE_COLORS[block.phase];
-            const left = (offsetHalves + block.startHalf) * HALF_COL_WIDTH;
-            const width = (block.endHalf - block.startHalf) * HALF_COL_WIDTH;
+            const left = (offsetHalves + block.startHalf) * halfColWidth;
+            const width = (block.endHalf - block.startHalf) * halfColWidth;
             const top = block.layer * 32 + 4;
             const isHovered = hoveredBlock === block;
 
