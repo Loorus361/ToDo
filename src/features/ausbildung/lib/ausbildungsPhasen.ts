@@ -37,7 +37,6 @@ export const AUSBILDUNGS_BLOECKE: StationBlock[] = [
   { label: 'PV',        phase: 'verwaltung', startHalf: 16,  endHalf: 22, type: 'ag',  layer: 1 },
   { label: 'Behörde',       phase: 'verwaltung', startHalf: 16,  endHalf: 22,  type: 'station', layer: 0 },
 
-
   // Phase 4 – Anwaltsstation
   { label: 'ELZ',           phase: 'anwalt',  startHalf: 22,  endHalf: 23,  type: 'ag',         layer: 1 },
   { label: 'RAZ',           phase: 'anwalt',  startHalf: 23,  endHalf: 25,  type: 'ag',         layer: 1 },
@@ -45,16 +44,21 @@ export const AUSBILDUNGS_BLOECKE: StationBlock[] = [
   { label: 'RAS',           phase: 'anwalt',  startHalf: 26,  endHalf: 29,  type: 'ag',         layer: 1 },
   { label: 'ELV',           phase: 'anwalt',  startHalf: 29,  endHalf: 30,  type: 'ag',         layer: 1 },
   { label: 'RAV',           phase: 'anwalt',  startHalf: 30,  endHalf: 32,  type: 'ag',         layer: 1 },
-  { label: 'KlKu',          phase: 'pruefung',startHalf: 32,  endHalf: 38,  type: 'klku',       layer: 1 },
-  // ggf. den type abschnitt entfernen. AGs inkl. KlKu in Layer 0, in Layer 1 könnten dann die KLausuren und Besprechungen vom KlKu rein
   { label: 'Rechtsanwalt u.a.',       phase: 'anwalt', startHalf: 22,  endHalf: 40,  type: 'station', layer: 0 },
+
+  // Phase 5 - Pflicht Klausurenkurs
+  { label: 'KlKu',            phase: 'ag',  startHalf: 32,  endHalf: 38,  type: 'klku',       layer: 1 },
+  { label: 'I ',              phase: 'ag',  startHalf: 32,  endHalf: 33,  type: 'klku',       layer: 2 },
+  { label: 'Besprechung I ',  phase: 'ag',  startHalf: 33,  endHalf: 34,  type: 'klku',       layer: 2 },
+  { label: 'II ',             phase: 'ag',  startHalf: 34,  endHalf: 35,  type: 'klku',       layer: 2 },
+  { label: 'Besprechung II ', phase: 'ag',  startHalf: 35,  endHalf: 38,  type: 'klku',       layer: 2 },
 
   // Schriftliches Examen (Monat 20)
   { label: 'Schriftl. Examen',    phase: 'pruefung',   startHalf: 38, endHalf: 39, type: 'pruefung', layer: 1 },
 
   // Phase 6 – Wahlstation
   { label: 'Wahlstation', phase: 'wahlstation', startHalf: 40,  endHalf: 48,  type: 'station',  layer: 0 }, 
-  { label: 'AVL',         phase: 'pruefung',    startHalf: 46,  endHalf: 48,  type: 'klku',       layer: 1 },
+  { label: 'AVL',         phase: 'ag',    startHalf: 46,  endHalf: 48,  type: 'klku',       layer: 1 },
 
   // Phase 7 – Mündliche Prüfung
   { label: 'Mündl. Examen',      phase: 'pruefung',   startHalf: 48, endHalf: 50, type: 'pruefung', layer: 1 },
