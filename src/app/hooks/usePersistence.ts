@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { registerDirtyCallback } from '../../shared/db/db';
 
-const BACKUP_INTERVAL_MS = 30 * 60 * 1000; // 30 Minuten
+const BACKUP_INTERVAL_MS = 120 * 60 * 1000; // 120 Minuten
 
 interface UsePersistenceOptions {
   isDirty: boolean;
@@ -15,7 +15,7 @@ interface UsePersistenceOptions {
  * Aufgaben:
  * 1. Registriert den Dirty-Callback am Dexie-Layer.
  * 2. Blockiert das Schließen des Tabs via beforeunload, wenn isDirty === true.
- * 3. Öffnet alle 30 Min. das Backup-Modal, wenn ungespeicherte Änderungen vorliegen.
+ * 3. Öffnet alle 60 Min. das Backup-Modal, wenn ungespeicherte Änderungen vorliegen.
  */
 export function usePersistence({ isDirty, setIsDirty, setShowBackupModal }: UsePersistenceOptions): void {
   const isDirtyRef = useRef(false);

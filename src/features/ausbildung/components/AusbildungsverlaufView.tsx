@@ -95,6 +95,13 @@ export default function AusbildungsverlaufView() {
 
   const totalWidth = totalHalves * HALF_COL_WIDTH;
   const layerCount = getMaxLayers(AUSBILDUNGS_BLOECKE);
+  const currentAbsHalf = useMemo(() => {
+    const now = new Date();
+    const halfInMonth = now.getDate() <= 15 ? 0 : 1;
+    return (now.getFullYear() * 12 + now.getMonth()) * 2 + halfInMonth;
+  }, []);
+  const currentHalfOffset = currentAbsHalf - globalStartHalf;
+  const showCurrentMarker = currentHalfOffset >= 0 && currentHalfOffset <= totalHalves;
 
   return (
     <div className="flex flex-col h-full">
@@ -159,7 +166,17 @@ export default function AusbildungsverlaufView() {
             Füge eine Kampagne hinzu, um den Ausbildungsverlauf zu sehen.
           </div>
         ) : (
-          <div style={{ minWidth: totalWidth + LABEL_WIDTH }}>
+          <div className="relative" style={{ minWidth: totalWidth + LABEL_WIDTH }}>
+            {showCurrentMarker ? (
+              <div
+                aria-label="Aktuelles Datum"
+                className="absolute top-0 bottom-0 pointer-events-none z-30"
+                style={{ left: LABEL_WIDTH + currentHalfOffset * HALF_COL_WIDTH }}
+              >
+                <div className="h-full border-l-2 border-red-500" />
+              </div>
+            ) : null}
+
             {/* Monatsheader */}
             <div className="sticky top-0 z-20 bg-white border-b border-gray-200">
               <div className="flex" style={{ paddingLeft: LABEL_WIDTH }}>
@@ -233,7 +250,7 @@ function KampagneRow({
       <div className="flex">
         {/* Label */}
         <div
-          className="flex-shrink-0 sticky left-0 z-10 bg-white border-r border-gray-200 px-3 py-2"
+          className="flex-shrink-0 sticky left-0 z-40 bg-white border-r border-gray-200 px-3 py-2"
           style={{ width: LABEL_WIDTH }}
         >
           <div className="flex items-center justify-between">

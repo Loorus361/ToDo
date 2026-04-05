@@ -10,15 +10,15 @@ import {
   type Person,
   updatePerson,
 } from '../data/contacts';
-import { PERSON_GROUPS, GROUP_STYLES } from '../lib/personGroups';
+import { PERSON_GROUPS, GROUP_STYLES, sortPersonGroups } from '../lib/personGroups';
 
 // ─── Gruppen-Badge ────────────────────────────────────────────────────────────
 function GroupBadge({ group }: { group: string }) {
   const style = GROUP_STYLES[group] ?? { bg: '#f3f4f6', text: '#374151', border: '#d1d5db' };
   return (
     <span
-      className="text-xs font-medium px-2 py-0.5 rounded-full border"
-      style={{ backgroundColor: style.bg, color: style.text, borderColor: style.border }}
+      className="text-xs font-medium px-2 py-0.5 rounded-full"
+      style={{ backgroundColor: style.bg, color: style.text }}
     >
       {group}
     </span>
@@ -34,7 +34,11 @@ function GroupPicker({
   onChange: (groups: string[]) => void;
 }) {
   function toggle(g: string) {
-    onChange(selected.includes(g) ? selected.filter((x) => x !== g) : [...selected, g]);
+    onChange(
+      selected.includes(g)
+        ? sortPersonGroups(selected.filter((x) => x !== g))
+        : sortPersonGroups([...selected, g])
+    );
   }
   return (
     <div className="flex flex-wrap gap-1.5">
@@ -45,7 +49,7 @@ function GroupPicker({
           onClick={() => toggle(g)}
           className={clsx(
             'text-xs font-medium px-2 py-0.5 rounded-full border transition-colors',
-            selected.includes(g) ? 'ring-2 ring-offset-1 ring-primary-400' : 'opacity-60 hover:opacity-100'
+            selected.includes(g) ? '' : 'opacity-60 hover:opacity-100'
           )}
           style={
             selected.includes(g)
@@ -89,7 +93,7 @@ function PersonRow({ personId }: { personId: number }) {
       >
         <div className="flex-1 min-w-0 flex items-center gap-2 flex-wrap">
           <span className="text-sm font-medium text-gray-900">{person.name}</span>
-          {person.groups?.map((g) => <GroupBadge key={g} group={g} />)}
+          {sortPersonGroups(person.groups ?? []).map((g) => <GroupBadge key={g} group={g} />)}
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
           {person.phone && <Phone size={12} className="text-gray-300" />}
