@@ -15,7 +15,7 @@ interface UsePersistenceOptions {
  * Aufgaben:
  * 1. Registriert den Dirty-Callback am Dexie-Layer.
  * 2. Blockiert das Schließen des Tabs via beforeunload, wenn isDirty === true.
- * 3. Öffnet alle 60 Min. das Backup-Modal, wenn ungespeicherte Änderungen vorliegen.
+ * 3. Öffnet alle 120 Min. das Backup-Modal, wenn ungespeicherte Änderungen vorliegen.
  */
 export function usePersistence({ isDirty, setIsDirty, setShowBackupModal }: UsePersistenceOptions): void {
   const isDirtyRef = useRef(false);
@@ -46,7 +46,7 @@ export function usePersistence({ isDirty, setIsDirty, setShowBackupModal }: UseP
     isDirtyRef.current = isDirty;
   }, [isDirty]);
 
-  // 30-Minuten-Timer
+  // 120-Minuten-Timer
   useEffect(() => {
     const timer = setInterval(() => {
       if (isDirtyRef.current) {

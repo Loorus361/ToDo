@@ -5,8 +5,7 @@ node_modules/
 dist/
 
 # Local OS / editor files
-.DS_Store
-src/.DS_Store
+**/.DS_Store
 
 # Local tool settings
 .claude/settings.local.json

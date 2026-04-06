@@ -1,12 +1,13 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { Plus, X, GraduationCap } from 'lucide-react';
 import { clsx } from 'clsx';
 import {
   AUSBILDUNGS_BLOECKE,
   PHASE_COLORS,
-  TOTAL_HALF_MONTHS,
+  TOTAL_QUARTERS,
   KAMPAGNE_LABELS,
   KAMPAGNE_MONATE,
+  getDefaultKampagnen,
   type StationBlock,
 } from '../lib/ausbildungsPhasen';
 
@@ -17,6 +18,7 @@ interface Kampagne {
   t0Month: number; // 0-basiert (JS Date)
 }
 
+const STORAGE_KEY = 'ausbildung-kampagnen';
 const LABEL_WIDTH = 120;
 const MONTH_NAMES = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
 const WIDTH_BY_SCALE = {
@@ -27,7 +29,7 @@ const WIDTH_BY_SCALE = {
 type ScaleOption = keyof typeof WIDTH_BY_SCALE;
 
 // Konvertiert (year, month) zu einem absoluten Viertelmonats-Index
-function toAbsHalf(year: number, month: number): number {
+function toAbsQuarter(year: number, month: number): number {
   return (year * 12 + month) * 4;
 }
 
@@ -37,65 +39,76 @@ function getMaxLayers(blocks: StationBlock[]): number {
 
 function sortKampagnenByStart(items: Kampagne[]): Kampagne[] {
   return [...items].sort((a, b) => {
-    const aStart = toAbsHalf(a.t0Year, a.t0Month);
-    const bStart = toAbsHalf(b.t0Year, b.t0Month);
+    const aStart = toAbsQuarter(a.t0Year, a.t0Month);
+    const bStart = toAbsQuarter(b.t0Year, b.t0Month);
     if (aStart !== bStart) return aStart - bStart;
     return a.label.localeCompare(b.label);
   });
 }
 
+function loadKampagnen(): Kampagne[] {
+  try {
+    const stored = sessionStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored) as Kampagne[];
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch { /* ignore */ }
+
+  // Fallback: Default-Kampagne erzeugen
+  const defaults = getDefaultKampagnen();
+  return defaults.map((d, i) => ({ id: `k-${i}`, ...d }));
+}
+
+function saveKampagnen(kampagnen: Kampagne[]): void {
+  try {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(kampagnen));
+  } catch { /* ignore */ }
+}
+
 export default function AusbildungsverlaufView() {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [kampagnen, setKampagnen] = useState<Kampagne[]>(() => {
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = now.getMonth();
-    // Finde aktuelle/letzte Kampagne
-    const starts = [1, 4, 7, 10]; // Feb, Mai, Aug, Nov (0-basiert)
-    const past = starts.filter(s => s <= m);
-    const t0Month = past.length > 0 ? past[past.length - 1] : 10;
-    const t0Year = past.length > 0 ? y : y - 1;
-    const idx = starts.indexOf(t0Month);
-    return [{
-      id: 'k-0',
-      label: `${KAMPAGNE_LABELS[idx]} ${t0Year}`,
-      t0Year,
-      t0Month,
-    }];
-  });
+  const [kampagnen, setKampagnen] = useState<Kampagne[]>(loadKampagnen);
   const [addYear, setAddYear] = useState(new Date().getFullYear());
   const [addMonthIdx, setAddMonthIdx] = useState(0);
   const [scale, setScale] = useState<ScaleOption>('mittel');
   const sortedKampagnen = useMemo(() => sortKampagnenByStart(kampagnen), [kampagnen]);
 
-  function addKampagne() {
+  // Kampagnen in sessionStorage persistieren
+  useEffect(() => {
+    saveKampagnen(kampagnen);
+  }, [kampagnen]);
+
+  const addKampagne = useCallback(() => {
     const m = KAMPAGNE_MONATE[addMonthIdx];
     const label = `${KAMPAGNE_LABELS[addMonthIdx]} ${addYear}`;
-    if (kampagnen.some(k => k.t0Year === addYear && k.t0Month === m)) return;
-    setKampagnen(prev => sortKampagnenByStart([...prev, { id: `k-${Date.now()}`, label, t0Year: addYear, t0Month: m }]));
-  }
+    setKampagnen(prev => {
+      if (prev.some(k => k.t0Year === addYear && k.t0Month === m)) return prev;
+      return sortKampagnenByStart([...prev, { id: `k-${Date.now()}`, label, t0Year: addYear, t0Month: m }]);
+    });
+  }, [addMonthIdx, addYear]);
 
-  function removeKampagne(id: string) {
+  const removeKampagne = useCallback((id: string) => {
     setKampagnen(prev => prev.filter(k => k.id !== id));
-  }
+  }, []);
 
   // Berechne den globalen Zeitraum (frühester Start bis spätestes Ende)
-  const { globalStartHalf, totalHalves, months } = useMemo(() => {
-    if (sortedKampagnen.length === 0) return { globalStartHalf: 0, totalHalves: 0, months: [] };
+  const { globalStartQuarter, totalQuarters, months } = useMemo(() => {
+    if (sortedKampagnen.length === 0) return { globalStartQuarter: 0, totalQuarters: 0, months: [] };
 
-    let minHalf = Infinity;
-    let maxHalf = -Infinity;
+    let minQ = Infinity;
+    let maxQ = -Infinity;
     for (const k of sortedKampagnen) {
-      const kStart = toAbsHalf(k.t0Year, k.t0Month);
-      minHalf = Math.min(minHalf, kStart);
-      maxHalf = Math.max(maxHalf, kStart + TOTAL_HALF_MONTHS);
+      const kStart = toAbsQuarter(k.t0Year, k.t0Month);
+      minQ = Math.min(minQ, kStart);
+      maxQ = Math.max(maxQ, kStart + TOTAL_QUARTERS);
     }
 
-    const total = maxHalf - minHalf;
+    const total = maxQ - minQ;
     const totalMonths = Math.ceil(total / 4);
 
     const monthLabels: { label: string; absMonth: number }[] = [];
-    const startAbsMonth = Math.floor(minHalf / 4);
+    const startAbsMonth = Math.floor(minQ / 4);
     for (let i = 0; i < totalMonths; i++) {
       const absMonth = startAbsMonth + i;
       const year = Math.floor(absMonth / 12);
@@ -106,20 +119,20 @@ export default function AusbildungsverlaufView() {
       });
     }
 
-    return { globalStartHalf: minHalf, totalHalves: total, months: monthLabels };
+    return { globalStartQuarter: minQ, totalQuarters: total, months: monthLabels };
   }, [sortedKampagnen]);
 
-  const halfColWidth = WIDTH_BY_SCALE[scale];
-  const totalWidth = totalHalves * halfColWidth;
+  const quarterColWidth = WIDTH_BY_SCALE[scale];
+  const totalWidth = totalQuarters * quarterColWidth;
   const layerCount = getMaxLayers(AUSBILDUNGS_BLOECKE);
-  const currentAbsHalf = useMemo(() => {
+  const currentAbsQuarter = useMemo(() => {
     const now = new Date();
     const day = now.getDate();
     const quarterInMonth = day <= 7 ? 0 : day <= 15 ? 1 : day <= 23 ? 2 : 3;
     return (now.getFullYear() * 12 + now.getMonth()) * 4 + quarterInMonth;
   }, []);
-  const currentHalfOffset = currentAbsHalf - globalStartHalf;
-  const showCurrentMarker = currentHalfOffset >= 0 && currentHalfOffset <= totalHalves;
+  const currentQuarterOffset = currentAbsQuarter - globalStartQuarter;
+  const showCurrentMarker = currentQuarterOffset >= 0 && currentQuarterOffset <= totalQuarters;
 
   return (
     <div className="flex flex-col h-full">
@@ -205,7 +218,7 @@ export default function AusbildungsverlaufView() {
               <div
                 aria-label="Aktuelles Datum"
                 className="absolute top-0 bottom-0 pointer-events-none z-30"
-                style={{ left: LABEL_WIDTH + currentHalfOffset * halfColWidth }}
+                style={{ left: LABEL_WIDTH + currentQuarterOffset * quarterColWidth }}
               >
                 <div className="h-full border-l-2 border-red-500" />
               </div>
@@ -221,7 +234,7 @@ export default function AusbildungsverlaufView() {
                       'text-xs text-gray-500 text-center border-r border-gray-100 flex-shrink-0 py-2 font-medium',
                       i % 2 === 0 ? 'bg-gray-50/50' : ''
                     )}
-                    style={{ width: halfColWidth * 4 }}
+                    style={{ width: quarterColWidth * 4 }}
                   >
                     {m.label}
                   </div>
@@ -229,14 +242,14 @@ export default function AusbildungsverlaufView() {
               </div>
               {/* Halbmonats-Unterteilung */}
               <div className="flex" style={{ paddingLeft: LABEL_WIDTH }}>
-                {Array.from({ length: Math.ceil(totalHalves / 2) }, (_, i) => (
+                {Array.from({ length: Math.ceil(totalQuarters / 2) }, (_, i) => (
                   <div
                     key={i}
                     className={clsx(
                       'text-[10px] text-gray-400 text-center border-r flex-shrink-0 py-0.5',
                       i % 2 === 0 ? 'border-gray-200' : 'border-gray-100'
                     )}
-                    style={{ width: halfColWidth * 2 }}
+                    style={{ width: quarterColWidth * 2 }}
                   >
                     {i % 2 === 0 ? '1.–15.' : '16.–31.'}
                   </div>
@@ -249,10 +262,10 @@ export default function AusbildungsverlaufView() {
               <KampagneRow
                 key={kampagne.id}
                 kampagne={kampagne}
-                globalStartHalf={globalStartHalf}
-                totalHalves={totalHalves}
+                globalStartQuarter={globalStartQuarter}
+                totalQuarters={totalQuarters}
                 layerCount={layerCount}
-                halfColWidth={halfColWidth}
+                quarterColWidth={quarterColWidth}
                 onRemove={() => removeKampagne(kampagne.id)}
               />
             ))}
@@ -265,22 +278,22 @@ export default function AusbildungsverlaufView() {
 
 function KampagneRow({
   kampagne,
-  globalStartHalf,
-  totalHalves,
+  globalStartQuarter,
+  totalQuarters,
   layerCount,
-  halfColWidth,
+  quarterColWidth,
   onRemove,
 }: {
   kampagne: Kampagne;
-  globalStartHalf: number;
-  totalHalves: number;
+  globalStartQuarter: number;
+  totalQuarters: number;
   layerCount: number;
-  halfColWidth: number;
+  quarterColWidth: number;
   onRemove: () => void;
 }) {
   const [hoveredBlock, setHoveredBlock] = useState<StationBlock | null>(null);
-  const kampagneStartHalf = toAbsHalf(kampagne.t0Year, kampagne.t0Month);
-  const offsetHalves = kampagneStartHalf - globalStartHalf;
+  const kampagneStartQuarter = toAbsQuarter(kampagne.t0Year, kampagne.t0Month);
+  const offsetQuarters = kampagneStartQuarter - globalStartQuarter;
 
   return (
     <div className="border-b border-gray-200 last:border-b-0">
@@ -293,7 +306,6 @@ function KampagneRow({
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm font-medium text-gray-900">{kampagne.label}</div>
-               {/* <div className="text-[10px] text-gray-400">25 Monate</div> */ }
             </div>
             <button
               onClick={onRemove}
@@ -307,16 +319,16 @@ function KampagneRow({
 
         {/* Blöcke */}
         <div className="relative flex-1" style={{ height: layerCount * 32 + 8 }}>
-          {/* Halbmonats-Gitter */}
+          {/* Viertelmonats-Gitter */}
           <div className="absolute inset-0 flex">
-            {Array.from({ length: totalHalves }, (_, i) => (
+            {Array.from({ length: totalQuarters }, (_, i) => (
               <div
                 key={i}
                 className={clsx(
                   'border-r flex-shrink-0 h-full',
                   i % 2 === 0 ? 'border-gray-200 bg-gray-50/30' : 'border-gray-100'
                 )}
-                style={{ width: halfColWidth }}
+                style={{ width: quarterColWidth }}
               />
             ))}
           </div>
@@ -324,20 +336,16 @@ function KampagneRow({
           {/* Station-Blöcke (verschoben um Kampagne-Offset) */}
           {AUSBILDUNGS_BLOECKE.map((block, idx) => {
             const colors = PHASE_COLORS[block.phase];
-            const left = (offsetHalves + block.startHalf) * halfColWidth;
-            const width = (block.endHalf - block.startHalf) * halfColWidth;
+            const left = (offsetQuarters + block.startQuarter) * quarterColWidth;
+            const width = (block.endQuarter - block.startQuarter) * quarterColWidth;
             const top = block.layer * 32 + 4;
             const isHovered = hoveredBlock === block;
 
-            // Absolutes Datum für Tooltip berechnen
-            const startMonth = kampagne.t0Month + Math.floor(block.startHalf / 4);
-            const startYear = kampagne.t0Year + Math.floor(startMonth / 12);
-            const startM = startMonth % 12;
-            const endMonth = kampagne.t0Month + Math.floor((block.endHalf - 1) / 4);
-            const endYear = kampagne.t0Year + Math.floor(endMonth / 12);
-            const endM = endMonth % 12;
+            // Absolutes Datum für Tooltip berechnen (via Date-Objekt für korrekten Überlauf)
+            const startDate = new Date(kampagne.t0Year, kampagne.t0Month + Math.floor(block.startQuarter / 4), 1);
+            const endDate = new Date(kampagne.t0Year, kampagne.t0Month + Math.floor((block.endQuarter - 1) / 4), 1);
 
-            const tooltip = `${block.label}\n${MONTH_NAMES[startM]} ${startYear} – ${MONTH_NAMES[endM]} ${endYear}`;
+            const tooltip = `${block.label}\n${MONTH_NAMES[startDate.getMonth()]} ${startDate.getFullYear()} – ${MONTH_NAMES[endDate.getMonth()]} ${endDate.getFullYear()}`;
 
             return (
               <div
