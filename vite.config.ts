@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -9,6 +10,11 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['@dnd-kit/sortable', '@dnd-kit/utilities'],
+  },
+  test: {
+    globals: true,
+    environment: 'node',
+    setupFiles: ['./src/test/setup.ts'],
   },
   plugins: [
     react(),

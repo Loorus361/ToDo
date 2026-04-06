@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Local OS / editor files
+**/.DS_Store
+
+# Local tool settings
+.claude/settings.local.json
+
+# Vite cache
+.vite/
