@@ -1,4 +1,4 @@
-import { autoScheduleTodayTodos, db, type Todo } from '../../../shared/db/db';
+import { autoArchiveDoneTodos, autoScheduleTodayTodos, db, type Todo } from '../../../shared/db/db';
 
 export function listKanbanTodos() {
   return db.todos.toArray();
@@ -14,4 +14,8 @@ export function moveTodoToStatus(todoId: number, status: Todo['status']) {
 
 export function scheduleTodayTodos() {
   return autoScheduleTodayTodos();
+}
+
+export function archiveDoneTodos() {
+  return autoArchiveDoneTodos();
 }

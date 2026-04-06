@@ -12,7 +12,7 @@ import { useState, useEffect } from 'react';
 import { clsx } from 'clsx';
 import { Plus, Check, Archive, Eye, EyeOff, Trash2, Star, RefreshCw } from 'lucide-react';
 import { useKanbanLogic, type KanbanStatus, type TodoWithProject } from '../hooks/useKanbanLogic';
-import { scheduleTodayTodos } from '../data/kanban';
+import { archiveDoneTodos, scheduleTodayTodos } from '../data/kanban';
 import { TodoDetailModal } from '../../todos/components/TodoDetailModal';
 import { useSettings } from '../../settings/hooks/useSettings';
 import { getProjectColor } from '../../../shared/lib/projectColors';
@@ -226,8 +226,11 @@ export default function KanbanBoard() {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const activeTodo = activeId != null ? Object.values(columns).flat().find((t) => t.id === activeId) : null;
 
-  // Beim ersten Laden fällige Backlog-Todos automatisch in "Heute" einplanen
-  useEffect(() => { scheduleTodayTodos(); }, []);
+  // Beim ersten Laden: fällige Backlog-Todos → Heute einplanen + erledigte → Archiv
+  useEffect(() => {
+    scheduleTodayTodos();
+    archiveDoneTodos();
+  }, []);
 
   function handleDragStart(event: DragStartEvent) { setActiveId(event.active.id as number); }
   function onDragEnd(event: Parameters<typeof handleDragEnd>[0]) { setActiveId(null); handleDragEnd(event); }

@@ -35,6 +35,7 @@ import {
   type Milestone,
   updateCommunication,
   updateMilestone,
+  updateProject,
 } from '../data/projects';
 
 const STATUS_LABEL: Record<string, string> = {
@@ -512,6 +513,8 @@ export default function ProjectDetail({ projectId, onBack }: ProjectDetailProps)
   const [showAddMilestone, setShowAddMilestone] = useState(false);
   const [openTodoId, setOpenTodoId] = useState<number | null>(null);
   const [commPersonFilter, setCommPersonFilter] = useState<number | null>(null);
+  const [editingName, setEditingName] = useState(false);
+  const [editNameValue, setEditNameValue] = useState('');
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -566,7 +569,38 @@ export default function ProjectDetail({ projectId, onBack }: ProjectDetailProps)
           <div className="w-4 h-4 rounded-full border flex-shrink-0 mt-1"
             style={{ backgroundColor: pc.bg, borderColor: pc.border }} />
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">{project.title}</h2>
+            {editingName ? (
+              <input
+                autoFocus
+                value={editNameValue}
+                onChange={(e) => setEditNameValue(e.target.value)}
+                onBlur={async () => {
+                  const trimmed = editNameValue.trim();
+                  if (trimmed) await updateProject(projectId, { title: trimmed });
+                  setEditingName(false);
+                }}
+                onKeyDown={async (e) => {
+                  if (e.key === 'Enter') {
+                    const trimmed = editNameValue.trim();
+                    if (trimmed) await updateProject(projectId, { title: trimmed });
+                    setEditingName(false);
+                  }
+                  if (e.key === 'Escape') setEditingName(false);
+                }}
+                className="text-xl font-semibold text-gray-900 border border-primary-300 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-primary-300"
+              />
+            ) : (
+              <div className="flex items-center gap-2 group">
+                <h2 className="text-xl font-semibold text-gray-900">{project.title}</h2>
+                <button
+                  onClick={() => { setEditNameValue(project.title); setEditingName(true); }}
+                  className="p-1 text-gray-300 hover:text-primary-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Umbenennen"
+                >
+                  <Pencil size={14} />
+                </button>
+              </div>
+            )}
             {project.deadline && (
               <p className="text-sm text-gray-400 mt-0.5">
                 Deadline: {new Date(project.deadline).toLocaleDateString('de-DE')}
