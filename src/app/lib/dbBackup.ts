@@ -90,13 +90,13 @@ export async function importDatabase(file: File): Promise<{ success: boolean; er
   }
 }
 
-// ─── Interne Hilfsfunktionen ──────────────────────────────────────────────────
+// ─── Hilfsfunktionen (exportiert für Tests) ─────────────────────────────────
 
 /**
  * Ermittelt die wahrscheinliche Schema-Version anhand vorhandener Tabellen,
  * falls kein _appSchemaVersion-Feld im Backup existiert (ältere Exports).
  */
-function guessVersionFromData(data: Record<string, unknown>): number {
+export function guessVersionFromData(data: Record<string, unknown>): number {
   const tables = getTableNames(data);
   if (tables.includes('milestones')) return 3;
   if (tables.includes('settings')) return 2;
@@ -104,7 +104,7 @@ function guessVersionFromData(data: Record<string, unknown>): number {
 }
 
 /** Gibt die Tabellennamen aus dem dexie-export-Datenformat zurück. */
-function getTableNames(data: Record<string, unknown>): string[] {
+export function getTableNames(data: Record<string, unknown>): string[] {
   const inner = data.data as Record<string, unknown> | undefined;
   if (!inner) return [];
   const dbData = Array.isArray(inner.data) ? inner.data : [];
@@ -115,7 +115,7 @@ function getTableNames(data: Record<string, unknown>): string[] {
  * Migriert die Backup-JSON-Struktur von `fromVersion` auf `CURRENT_SCHEMA_VERSION`.
  * Fügt fehlende Tabellen mit leeren Daten hinzu und passt Schema-Definitionen an.
  */
-function migrateBackupData(data: Record<string, unknown>, fromVersion: number): void {
+export function migrateBackupData(data: Record<string, unknown>, fromVersion: number): void {
   const inner = data.data as Record<string, unknown>;
   if (!inner) return;
 
