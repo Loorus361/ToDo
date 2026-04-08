@@ -44,6 +44,7 @@ export interface Todo {
   projectId?: number;
   commId?: number;
   lastAutoScheduledDate?: string; // 'YYYY-MM-DD' – verhindert tägliche Re-Einplanung
+  completedAt?: string;           // 'YYYY-MM-DD' – gesetzt wenn status → 'done'
 }
 
 export interface Milestone {
@@ -62,6 +63,29 @@ export interface AppSettings {
   accentColor?: string;           // 'blue'|'indigo'|'emerald'|'rose'|'amber'
   bgStyle?: string;               // 'light'|'warm'|'slate'
   defaultTodoStatus?: 'backlog' | 'doing';
+  lastAutoArchivedDate?: string;  // 'YYYY-MM-DD' – verhindert mehrfaches Auto-Archivieren am selben Tag
+}
+
+// ─── Projekt-Templates ────────────────────────────────────────────────────────
+
+export interface TemplateTodoItem {
+  title: string;
+  status: 'backlog' | 'doing' | 'today';
+  description?: string;
+  prio?: boolean;
+}
+
+export interface TemplateMilestoneItem {
+  title: string;
+  notes?: string;
+}
+
+export interface ProjectTemplate {
+  id?: number;
+  name: string;
+  description?: string;
+  todos?: TemplateTodoItem[];
+  milestones?: TemplateMilestoneItem[];
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -82,6 +106,7 @@ class AppDB extends Dexie {
   todos!: EntityTable<Todo, 'id'>;
   settings!: EntityTable<AppSettings, 'id'>;
   milestones!: EntityTable<Milestone, 'id'>;
+  projectTemplates!: EntityTable<ProjectTemplate, 'id'>;
 
   constructor() {
     super('todo-manager-db');
@@ -112,13 +137,30 @@ class AppDB extends Dexie {
         .modify({ status: 'backlog' });
     });
 
+    // Version 5: projectTemplates-Tabelle; completedAt-Index für Todos
+    this.version(5).stores({
+      todos: '++id, title, status, deadline, projectId, commId, completedAt',
+      projectTemplates: '++id, name',
+    });
+
     // Dirty-Hooks
-    const tables = [this.projects, this.persons, this.communications, this.todos, this.settings, this.milestones] as Dexie.Table[];
+    const tables = [this.projects, this.persons, this.communications, this.todos, this.settings, this.milestones, this.projectTemplates] as Dexie.Table[];
     for (const table of tables) {
       table.hook('creating', () => markDirty());
       table.hook('updating', () => markDirty());
       table.hook('deleting', () => markDirty());
     }
+
+    // completedAt automatisch setzen/löschen wenn sich der Status ändert
+    this.todos.hook('updating', (modifications) => {
+      if ('status' in modifications) {
+        if (modifications.status === 'done') {
+          (modifications as Partial<Todo>).completedAt = new Date().toISOString().split('T')[0];
+        } else {
+          (modifications as Partial<Todo>).completedAt = undefined;
+        }
+      }
+    });
 
     // Default-Einstellungen beim ersten Start anlegen
     this.on('ready', async () => {
@@ -146,6 +188,29 @@ export async function deleteProjectCascade(projectId: number): Promise<void> {
 export async function saveSettings(partial: Partial<AppSettings>): Promise<void> {
   const existing = await db.settings.get(1);
   await db.settings.put({ ...DEFAULT_SETTINGS, ...existing, ...partial, id: 1 });
+}
+
+// Archiviert erledigte Todos automatisch, sobald completedAt mindestens 1 Tag zurückliegt.
+// Läuft einmal täglich ab 5:00 Uhr (geprüft beim App-Start).
+export async function autoArchiveDoneTodos(): Promise<void> {
+  const now = new Date();
+  // Nur ab 5:00 Uhr ausführen
+  if (now.getHours() < 5) return;
+
+  const todayStr = now.toISOString().split('T')[0];
+  const existing = await db.settings.get(1);
+  if (existing?.lastAutoArchivedDate === todayStr) return;
+
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+  await db.todos
+    .where('status').equals('done')
+    .and((t) => t.completedAt != null && t.completedAt <= yesterdayStr)
+    .modify({ status: 'archived' });
+
+  await saveSettings({ lastAutoArchivedDate: todayStr });
 }
 
 // Verschiebt fällige Backlog-Todos automatisch in "Heute zur Bearbeitung".
