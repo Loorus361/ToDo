@@ -10,7 +10,8 @@ import {
   getDefaultKampagnen,
   type StationBlock,
 } from '../lib/ausbildungsPhasen';
-import { useSettings } from '../../settings/hooks/useSettings';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { getSettings, DEFAULT_SETTINGS } from '../../settings/data/settings';
 
 interface Kampagne {
   id: string;
@@ -69,20 +70,38 @@ function saveKampagnen(kampagnen: Kampagne[]): void {
 
 export default function AusbildungsverlaufView() {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const settings = useSettings();
-  const [kampagnen, setKampagnen] = useState<Kampagne[]>(() =>
-    loadKampagnen(settings.defaultKampagnenModus ?? 'aktuelle'),
-  );
+  // rawSettings === undefined solange IndexedDB noch lädt; danach echte Werte
+  const rawSettings = useLiveQuery(() => getSettings(), []);
+  const [kampagnen, setKampagnen] = useState<Kampagne[]>(() => loadKampagnen('aktuelle'));
+  const [settingsApplied, setSettingsApplied] = useState(false);
   const [addYear, setAddYear] = useState(new Date().getFullYear());
   const [addMonthIdx, setAddMonthIdx] = useState(0);
   const [scale, setScale] = useState<ScaleOption>('mittel');
   const [scrollLeft, setScrollLeft] = useState(0);
   const sortedKampagnen = useMemo(() => sortKampagnenByStart(kampagnen), [kampagnen]);
 
-  // Kampagnen in sessionStorage persistieren
+  // Einmal nach dem echten Settings-Load den Modus anwenden –
+  // aber nur wenn der Nutzer noch keine eigene Auswahl im sessionStorage hat.
   useEffect(() => {
+    if (settingsApplied || rawSettings === undefined) return;
+    const stored = sessionStorage.getItem(STORAGE_KEY);
+    const hasUserData = !!stored && (() => {
+      try { const p = JSON.parse(stored) as unknown[]; return Array.isArray(p) && p.length > 0; }
+      catch { return false; }
+    })();
+    if (!hasUserData) {
+      const modus = (rawSettings ?? DEFAULT_SETTINGS).defaultKampagnenModus ?? 'aktuelle';
+      const defaults = getDefaultKampagnen(modus);
+      setKampagnen(defaults.map((d, i) => ({ id: `k-${i}`, ...d })));
+    }
+    setSettingsApplied(true);
+  }, [rawSettings, settingsApplied]);
+
+  // Kampagnen in sessionStorage persistieren (erst nach Settings-Anwendung)
+  useEffect(() => {
+    if (!settingsApplied) return;
     saveKampagnen(kampagnen);
-  }, [kampagnen]);
+  }, [kampagnen, settingsApplied]);
 
   // Scroll-Position für mitscrollende Labels verfolgen
   useEffect(() => {
