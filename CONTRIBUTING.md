@@ -1,5 +1,9 @@
 # Contributing Guidelines
 
+## Geltungsbereich
+
+Diese Regeln gelten für alle Beiträge – inklusive KI-generierter Änderungen (z. B. Codex, Claude).
+
 ## Ziel
 Dieses Repository folgt einfachen, klaren Regeln, um Änderungen nachvollziehbar, reviewbar und stabil zu halten.
 
@@ -25,6 +29,16 @@ Dieses Repository folgt einfachen, klaren Regeln, um Änderungen nachvollziehbar
 Beispiele:
 - `feature/reminder-time`
 - `fix/todo-validation`
+
+---
+
+## Workflow (verbindlich)
+
+- Neue Arbeit erfolgt immer in einem `feature/*` oder `fix/*` Branch
+- Branch wird von `beta` erstellt
+- PR geht immer von `feature/*` → `beta`
+- `main` wird ausschließlich über `beta` aktualisiert
+- Direktes Arbeiten auf `main` oder `beta` ist nicht erlaubt
 
 ---
 
@@ -57,6 +71,7 @@ Beispiele:
 
 Ein PR sollte:
 
+- Ziel-Branch ist in der Regel `beta` (nicht `main`)
 - möglichst **ein klares Thema** behandeln
 - mehrere Änderungen sind erlaubt, wenn sie **fachlich zusammengehören**
 - verständlich beschreiben:
@@ -92,14 +107,12 @@ Dieses strukturiert:
 
 Standard: **Squash and Merge**
 
-Das bedeutet:
-- Alle Commits eines PR werden zu einem Commit zusammengefasst
+- PRs werden in der Regel gesquasht
 - Commit-Message beschreibt die finale Änderung
 
 Beispiel:
 - `feat: add todo reminder feature`
 
-### Ausnahme
 ### Ausnahme
 Kein Squash, wenn die Commit-Historie sinnvoll strukturiert ist und mehrere Aspekte getrennt nachvollziehbar bleiben sollen (z. B. Feature + Fix + Refactor).
 
@@ -119,14 +132,14 @@ Vor Merge sollte sichergestellt sein:
 
 - App funktioniert lokal
 - Keine offensichtlichen Fehler
+- Keine Console-Errors im Browser
 - Relevante Tests laufen (falls vorhanden)
 
 ---
 
-## Optional (Empfohlen für später)
+## Branch Protection
 
-- Branch Protection Rules aktivieren
-- PR Templates nutzen
-- CI Checks (Build / Lint / Tests)
+- `main` ist geschützt (PR + Review erforderlich)
+- `beta` ist geschützt (kein Force Push / kein Löschen)
 
 ---
