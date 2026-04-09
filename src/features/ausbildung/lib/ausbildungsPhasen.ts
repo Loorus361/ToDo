@@ -48,9 +48,9 @@ export const AUSBILDUNGS_BLOECKE: StationBlock[] = [
 
   // Phase 5 – Pflicht Klausurenkurs
   { label: 'KlKu',                  phase: 'ag', startQuarter: 64, endQuarter: 76, type: 'klku', layer: 1 },
-  { label: 'I',                     phase: 'ag', startQuarter: 64, endQuarter: 66, type: 'klku', layer: 2 },
+  { label: 'Klausur I',             phase: 'ag', startQuarter: 64, endQuarter: 66, type: 'klku', layer: 2 },
   { label: 'Besprechung I',         phase: 'ag', startQuarter: 66, endQuarter: 68, type: 'klku', layer: 2 },
-  { label: 'II',                    phase: 'ag', startQuarter: 68, endQuarter: 70, type: 'klku', layer: 2 },
+  { label: 'Klausur II',            phase: 'ag', startQuarter: 68, endQuarter: 70, type: 'klku', layer: 2 },
   { label: 'Besprechung II',        phase: 'ag', startQuarter: 70, endQuarter: 76, type: 'klku', layer: 2 },
 
   // Schriftliches Examen (Monat 20)

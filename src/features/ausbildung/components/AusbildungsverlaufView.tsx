@@ -72,12 +72,22 @@ export default function AusbildungsverlaufView() {
   const [addYear, setAddYear] = useState(new Date().getFullYear());
   const [addMonthIdx, setAddMonthIdx] = useState(0);
   const [scale, setScale] = useState<ScaleOption>('mittel');
+  const [scrollLeft, setScrollLeft] = useState(0);
   const sortedKampagnen = useMemo(() => sortKampagnenByStart(kampagnen), [kampagnen]);
 
   // Kampagnen in sessionStorage persistieren
   useEffect(() => {
     saveKampagnen(kampagnen);
   }, [kampagnen]);
+
+  // Scroll-Position für mitscrollende Labels verfolgen
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const handler = () => setScrollLeft(el.scrollLeft);
+    el.addEventListener('scroll', handler, { passive: true });
+    return () => el.removeEventListener('scroll', handler);
+  }, []);
 
   const addKampagne = useCallback(() => {
     const m = KAMPAGNE_MONATE[addMonthIdx];
@@ -266,6 +276,7 @@ export default function AusbildungsverlaufView() {
                 totalQuarters={totalQuarters}
                 layerCount={layerCount}
                 quarterColWidth={quarterColWidth}
+                scrollLeft={scrollLeft}
                 onRemove={() => removeKampagne(kampagne.id)}
               />
             ))}
@@ -282,6 +293,7 @@ function KampagneRow({
   totalQuarters,
   layerCount,
   quarterColWidth,
+  scrollLeft,
   onRemove,
 }: {
   kampagne: Kampagne;
@@ -289,6 +301,7 @@ function KampagneRow({
   totalQuarters: number;
   layerCount: number;
   quarterColWidth: number;
+  scrollLeft: number;
   onRemove: () => void;
 }) {
   const [hoveredBlock, setHoveredBlock] = useState<StationBlock | null>(null);
@@ -347,10 +360,14 @@ function KampagneRow({
 
             const tooltip = `${block.label}\n${MONTH_NAMES[startDate.getMonth()]} ${startDate.getFullYear()} – ${MONTH_NAMES[endDate.getMonth()]} ${endDate.getFullYear()}`;
 
+            // Label mitscrollen: Offset berechnen, damit der Text im sichtbaren Teil des Blocks bleibt
+            const hiddenLeft = Math.max(0, scrollLeft - left);
+            const labelOffset = Math.min(hiddenLeft, Math.max(0, width - 40));
+
             return (
               <div
                 key={idx}
-                className="absolute rounded-md border text-xs font-medium px-1.5 flex items-center cursor-default transition-shadow overflow-hidden whitespace-nowrap"
+                className="absolute rounded-md border text-xs font-medium px-1.5 flex items-center cursor-default transition-shadow overflow-hidden"
                 style={{
                   left,
                   width,
@@ -366,7 +383,7 @@ function KampagneRow({
                 onMouseLeave={() => setHoveredBlock(null)}
                 title={tooltip}
               >
-                <span className="truncate">{block.label}</span>
+                <span className="whitespace-nowrap" style={{ transform: `translateX(${labelOffset}px)` }}>{block.label}</span>
               </div>
             );
           })}
