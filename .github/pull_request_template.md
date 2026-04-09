@@ -1,5 +1,17 @@
 # Pull Request
 
+## Ziel-Branch
+- [ ] beta
+- [ ] main (nur für Releases / stabile Änderungen)
+
+## KI-Unterstützung
+- [ ] Codex
+- [ ] Claude
+- [ ] keine
+
+Hinweise:
+-
+
 ## Ziel
 Was ist das übergeordnete Ziel dieses PRs?
 
@@ -31,6 +43,7 @@ Warum sind diese Änderungen in **einem** PR zusammengefasst?
 
 - [ ] lokal getestet
 - [ ] relevante Edge Cases geprüft
+- [ ] keine Console-Errors im Browser
 - [ ] keine Tests erforderlich
 
 Details:
