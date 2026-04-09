@@ -73,7 +73,10 @@ export default function AusbildungsverlaufView() {
   const scrollRef = useRef<HTMLDivElement>(null);
   // rawSettings === undefined solange IndexedDB noch lädt; danach echte Werte
   const rawSettings = useLiveQuery(() => getSettings(), []);
-  const [kampagnen, setKampagnen] = useState<Kampagne[]>(() => loadKampagnen('aktuelle'));
+  const [kampagnen, setKampagnen] = useState<Kampagne[]>(() => {
+    const storedModus = sessionStorage.getItem(MODUS_STORAGE_KEY) as 'aktuelle' | 'alle_laufenden' | null;
+    return loadKampagnen(storedModus ?? 'aktuelle');
+  });
   const [addYear, setAddYear] = useState(new Date().getFullYear());
   const [addMonthIdx, setAddMonthIdx] = useState(0);
   const [scale, setScale] = useState<ScaleOption>('mittel');
