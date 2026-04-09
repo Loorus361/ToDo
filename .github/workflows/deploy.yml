@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IS_BETA: ${{ github.ref_name == 'beta' }}
-      BASE_PATH: ${{ github.ref_name == 'beta' && '/beta/' || '/' }}
+      BASE_PATH: ${{ github.ref_name == 'beta' && '/ToDo/beta/' || '/ToDo/' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
