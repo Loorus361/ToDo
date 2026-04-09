@@ -84,15 +84,18 @@ export default function AusbildungsverlaufView() {
   const sortedKampagnen = useMemo(() => sortKampagnenByStart(kampagnen), [kampagnen]);
 
   // Modus aus Settings anwenden – läuft bei jedem rawSettings-Wechsel.
-  // Wenn storedModus im sessionStorage vom DB-Modus abweicht (oder fehlt),
-  // werden die Kampagnen neu gesetzt. So reagiert die View auch nach Navigation
-  // zu den Einstellungen und zurück.
+  // Kampagnen werden nur zurückgesetzt, wenn noch keine User-Auswahl in der Session
+  // gespeichert ist (erstes Öffnen). Danach wird nur der gespeicherte Modus aktualisiert,
+  // damit spätere Sessions den neuen Modus als Default nutzen – ohne aktuelle Kampagnen zu überschreiben.
   useEffect(() => {
     if (rawSettings === undefined) return;
     const modus = rawSettings.defaultKampagnenModus ?? 'aktuelle';
     const storedModus = sessionStorage.getItem(MODUS_STORAGE_KEY);
     if (storedModus !== modus) {
-      setKampagnen(getDefaultKampagnen(modus).map((d, i) => ({ id: `k-${i}`, ...d })));
+      const hasStoredKampagnen = sessionStorage.getItem(STORAGE_KEY) !== null;
+      if (!hasStoredKampagnen) {
+        setKampagnen(getDefaultKampagnen(modus).map((d, i) => ({ id: `k-${i}`, ...d })));
+      }
       sessionStorage.setItem(MODUS_STORAGE_KEY, modus);
     }
   }, [rawSettings]);
