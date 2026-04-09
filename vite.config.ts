@@ -3,8 +3,10 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+const basePath = process.env.BASE_PATH ?? '/ToDo/';
+
 export default defineConfig({
-  base: '/ToDo/',
+  base: basePath,
   resolve: {
     dedupe: ['react', 'react-dom'],
   },
@@ -34,8 +36,8 @@ export default defineConfig({
         theme_color: '#3b82f6',
         background_color: '#ffffff',
         display: 'standalone',
-        start_url: '/ToDo/',
-        scope: '/ToDo/',
+        start_url: basePath,
+        scope: basePath,
         lang: 'de',
         icons: [
           {

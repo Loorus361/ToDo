@@ -1,0 +1,64 @@
+name: Issue Plan
+
+on:
+  issues:
+    types:
+      - opened
+      - reopened
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build issue context
+        run: node .github/scripts/issue-plan-context.mjs
+
+      - name: Request implementation plan
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-5-mini' }}
+        run: node .github/scripts/issue-plan-request.mjs
+
+      - name: Upsert issue comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const marker = '<!-- codex-issue-plan -->';
+            const body = `${marker}\n${fs.readFileSync('issue-plan-comment.md', 'utf8')}`;
+            const issue_number = context.payload.issue.number;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              ...context.repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const existing = comments.find((comment) => comment.body?.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                ...context.repo,
+                comment_id: existing.id,
+                body,
+              });
+              return;
+            }
+
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number,
+              body,
+            });

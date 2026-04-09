@@ -4,40 +4,53 @@ on:
   push:
     branches:
       - main
+      - beta
+  workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.ref_name }}
   cancel-in-progress: true
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
+    env:
+      IS_BETA: ${{ github.ref_name == 'beta' }}
+      BASE_PATH: ${{ github.ref_name == 'beta' && '/beta/' || '/' }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
-      - run: npm ci
-      - run: npm run build
+      - name: Install dependencies
+        run: npm ci
 
-      - uses: actions/upload-pages-artifact@v3
+      - name: Build application
+        run: npm run build
+
+      - name: Add .nojekyll
+        run: touch dist/.nojekyll
+
+      - name: Deploy production site
+        if: env.IS_BETA != 'true'
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          path: dist
+          branch: gh-pages
+          folder: dist
+          clean-exclude: beta
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Deploy beta preview
+        if: env.IS_BETA == 'true'
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: dist
+          target-folder: beta
