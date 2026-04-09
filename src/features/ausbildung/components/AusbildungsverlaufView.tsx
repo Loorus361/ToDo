@@ -109,6 +109,14 @@ export default function AusbildungsverlaufView() {
     return () => el.removeEventListener('scroll', handler);
   }, []);
 
+  // Zum aktuellen Datum scrollen wenn Kampagnen geladen oder geändert werden
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || currentQuarterOffset < 0 || currentQuarterOffset > totalQuarters) return;
+    const targetScroll = currentQuarterOffset * quarterColWidth - (el.clientWidth - LABEL_WIDTH) / 2;
+    el.scrollLeft = Math.max(0, targetScroll);
+  }, [sortedKampagnen]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const addKampagne = useCallback(() => {
     const m = KAMPAGNE_MONATE[addMonthIdx];
     const label = `${KAMPAGNE_LABELS[addMonthIdx]} ${addYear}`;
