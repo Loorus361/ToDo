@@ -17,6 +17,18 @@ npm run build
 
 Die App laeuft mit dem Vite-Basispfad `/ToDo/`.
 
+## Contributing
+
+Dieses Projekt nutzt eine strukturierte Branch- und PR-Strategie.
+
+Wichtige Punkte:
+- Änderungen erfolgen über `feature/*` oder `fix/*` Branches
+- Pull Requests gehen in der Regel nach `beta`
+- `main` enthält nur stabile Versionen
+
+Details:
+Siehe [CONTRIBUTING.md](./CONTRIBUTING.md)
+
 ## Architektur
 
 - `src/app`: App-Shell, Routing, Sidebar, Persistenz, Backup
