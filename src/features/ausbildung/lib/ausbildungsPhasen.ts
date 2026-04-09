@@ -69,20 +69,36 @@ export const KAMPAGNE_LABELS = ['Februar', 'Mai', 'August', 'November'] as const
 
 export const TOTAL_QUARTERS = 100; // 25 Monate × 4
 
-export function getDefaultKampagnen(): { label: string; t0Year: number; t0Month: number }[] {
+export function getDefaultKampagnen(
+  modus: 'aktuelle' | 'alle_laufenden' = 'aktuelle',
+): { label: string; t0Year: number; t0Month: number }[] {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
+  const nowAbsMonth = now.getFullYear() * 12 + now.getMonth();
 
-  const starts = [
-    { label: `Februar ${year}`, t0Year: year, t0Month: 1 },
-    { label: `Mai ${year}`, t0Year: year, t0Month: 4 },
-    { label: `August ${year}`, t0Year: year, t0Month: 7 },
-    { label: `November ${year}`, t0Year: year, t0Month: 10 },
-    { label: `Februar ${year + 1}`, t0Year: year + 1, t0Month: 1 },
-  ];
+  // Alle Kampagnenstarts im Bereich ±3 Jahre generieren
+  const candidates: { label: string; t0Year: number; t0Month: number; absMonth: number }[] = [];
+  for (let year = now.getFullYear() - 3; year <= now.getFullYear() + 1; year++) {
+    KAMPAGNE_MONATE.forEach((month, i) => {
+      candidates.push({
+        label: `${KAMPAGNE_LABELS[i]} ${year}`,
+        t0Year: year,
+        t0Month: month,
+        absMonth: year * 12 + month,
+      });
+    });
+  }
+  candidates.sort((a, b) => a.absMonth - b.absMonth);
 
-  // Aktuelle oder letzte Kampagne finden
-  const current = starts.filter(s => s.t0Year < year || (s.t0Year === year && s.t0Month <= month));
-  return current.length > 0 ? [current[current.length - 1]] : [starts[0]];
+  if (modus === 'alle_laufenden') {
+    // Laufend = gestartet (absMonth <= heute) und noch nicht abgeschlossen (absMonth + 25 > heute)
+    const active = candidates.filter(
+      c => c.absMonth <= nowAbsMonth && c.absMonth + 25 > nowAbsMonth,
+    );
+    if (active.length > 0) return active.map(({ label, t0Year, t0Month }) => ({ label, t0Year, t0Month }));
+  }
+
+  // Fallback / modus === 'aktuelle': letzte gestartete Kampagne
+  const past = candidates.filter(c => c.absMonth <= nowAbsMonth);
+  const result = past.length > 0 ? past[past.length - 1] : candidates[0];
+  return [{ label: result.label, t0Year: result.t0Year, t0Month: result.t0Month }];
 }

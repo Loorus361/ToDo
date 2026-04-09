@@ -10,6 +10,7 @@ import {
   getDefaultKampagnen,
   type StationBlock,
 } from '../lib/ausbildungsPhasen';
+import { useSettings } from '../../settings/hooks/useSettings';
 
 interface Kampagne {
   id: string;
@@ -46,7 +47,7 @@ function sortKampagnenByStart(items: Kampagne[]): Kampagne[] {
   });
 }
 
-function loadKampagnen(): Kampagne[] {
+function loadKampagnen(modus: 'aktuelle' | 'alle_laufenden' = 'aktuelle'): Kampagne[] {
   try {
     const stored = sessionStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -55,8 +56,8 @@ function loadKampagnen(): Kampagne[] {
     }
   } catch { /* ignore */ }
 
-  // Fallback: Default-Kampagne erzeugen
-  const defaults = getDefaultKampagnen();
+  // Fallback: Default-Kampagnen anhand des Settings-Modus erzeugen
+  const defaults = getDefaultKampagnen(modus);
   return defaults.map((d, i) => ({ id: `k-${i}`, ...d }));
 }
 
@@ -68,7 +69,10 @@ function saveKampagnen(kampagnen: Kampagne[]): void {
 
 export default function AusbildungsverlaufView() {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [kampagnen, setKampagnen] = useState<Kampagne[]>(loadKampagnen);
+  const settings = useSettings();
+  const [kampagnen, setKampagnen] = useState<Kampagne[]>(() =>
+    loadKampagnen(settings.defaultKampagnenModus ?? 'aktuelle'),
+  );
   const [addYear, setAddYear] = useState(new Date().getFullYear());
   const [addMonthIdx, setAddMonthIdx] = useState(0);
   const [scale, setScale] = useState<ScaleOption>('mittel');

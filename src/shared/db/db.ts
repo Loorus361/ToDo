@@ -64,6 +64,7 @@ export interface AppSettings {
   bgStyle?: string;               // 'light'|'warm'|'slate'
   defaultTodoStatus?: 'backlog' | 'doing';
   lastAutoArchivedDate?: string;  // 'YYYY-MM-DD' – verhindert mehrfaches Auto-Archivieren am selben Tag
+  defaultKampagnenModus?: 'aktuelle' | 'alle_laufenden';
 }
 
 // ─── Projekt-Templates ────────────────────────────────────────────────────────
@@ -95,6 +96,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   accentColor: 'blue',
   bgStyle: 'light',
   defaultTodoStatus: 'backlog',
+  defaultKampagnenModus: 'aktuelle',
 };
 
 // ─── DB-Klasse ────────────────────────────────────────────────────────────────
