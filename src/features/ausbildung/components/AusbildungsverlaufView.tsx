@@ -11,7 +11,7 @@ import {
   type StationBlock,
 } from '../lib/ausbildungsPhasen';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { getSettings, DEFAULT_SETTINGS } from '../../settings/data/settings';
+import { getSettings } from '../../settings/data/settings';
 
 interface Kampagne {
   id: string;
@@ -21,6 +21,7 @@ interface Kampagne {
 }
 
 const STORAGE_KEY = 'ausbildung-kampagnen';
+const MODUS_STORAGE_KEY = 'ausbildung-kampagnen-modus';
 const LABEL_WIDTH = 120;
 const MONTH_NAMES = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
 const WIDTH_BY_SCALE = {
@@ -73,35 +74,31 @@ export default function AusbildungsverlaufView() {
   // rawSettings === undefined solange IndexedDB noch lädt; danach echte Werte
   const rawSettings = useLiveQuery(() => getSettings(), []);
   const [kampagnen, setKampagnen] = useState<Kampagne[]>(() => loadKampagnen('aktuelle'));
-  const [settingsApplied, setSettingsApplied] = useState(false);
   const [addYear, setAddYear] = useState(new Date().getFullYear());
   const [addMonthIdx, setAddMonthIdx] = useState(0);
   const [scale, setScale] = useState<ScaleOption>('mittel');
   const [scrollLeft, setScrollLeft] = useState(0);
   const sortedKampagnen = useMemo(() => sortKampagnenByStart(kampagnen), [kampagnen]);
 
-  // Einmal nach dem echten Settings-Load den Modus anwenden –
-  // aber nur wenn der Nutzer noch keine eigene Auswahl im sessionStorage hat.
+  // Modus aus Settings anwenden – läuft bei jedem rawSettings-Wechsel.
+  // Wenn storedModus im sessionStorage vom DB-Modus abweicht (oder fehlt),
+  // werden die Kampagnen neu gesetzt. So reagiert die View auch nach Navigation
+  // zu den Einstellungen und zurück.
   useEffect(() => {
-    if (settingsApplied || rawSettings === undefined) return;
-    const stored = sessionStorage.getItem(STORAGE_KEY);
-    const hasUserData = !!stored && (() => {
-      try { const p = JSON.parse(stored) as unknown[]; return Array.isArray(p) && p.length > 0; }
-      catch { return false; }
-    })();
-    if (!hasUserData) {
-      const modus = (rawSettings ?? DEFAULT_SETTINGS).defaultKampagnenModus ?? 'aktuelle';
-      const defaults = getDefaultKampagnen(modus);
-      setKampagnen(defaults.map((d, i) => ({ id: `k-${i}`, ...d })));
+    if (rawSettings === undefined) return;
+    const modus = rawSettings.defaultKampagnenModus ?? 'aktuelle';
+    const storedModus = sessionStorage.getItem(MODUS_STORAGE_KEY);
+    if (storedModus !== modus) {
+      setKampagnen(getDefaultKampagnen(modus).map((d, i) => ({ id: `k-${i}`, ...d })));
+      sessionStorage.setItem(MODUS_STORAGE_KEY, modus);
     }
-    setSettingsApplied(true);
-  }, [rawSettings, settingsApplied]);
+  }, [rawSettings]);
 
-  // Kampagnen in sessionStorage persistieren (erst nach Settings-Anwendung)
+  // Kampagnen in sessionStorage persistieren (nur wenn Modus bereits gesetzt)
   useEffect(() => {
-    if (!settingsApplied) return;
+    if (sessionStorage.getItem(MODUS_STORAGE_KEY) === null) return;
     saveKampagnen(kampagnen);
-  }, [kampagnen, settingsApplied]);
+  }, [kampagnen]);
 
   // Scroll-Position für mitscrollende Labels verfolgen
   useEffect(() => {
