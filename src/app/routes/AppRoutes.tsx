@@ -5,6 +5,7 @@ import ProjectDetail from '../../features/projects/components/ProjectDetail';
 import ContactsView from '../../features/contacts/components/ContactsView';
 import SettingsView from '../../features/settings/components/SettingsView';
 import AusbildungsverlaufView from '../../features/ausbildung/components/AusbildungsverlaufView';
+import HonorarView from '../../features/honorar/components/HonorarView';
 import { PageSection } from '../components/PageSection';
 
 function ProjectDetailRoute() {
@@ -48,6 +49,14 @@ export function AppRoutes() {
         element={(
           <PageSection fullHeight>
             <AusbildungsverlaufView />
+          </PageSection>
+        )}
+      />
+      <Route
+        path="/honorar"
+        element={(
+          <PageSection fullHeight>
+            <HonorarView />
           </PageSection>
         )}
       />
