@@ -35,6 +35,12 @@ export default function HonorarSettingsSection() {
     return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
   }
 
+  function parseNonNegativeInteger(rawValue: string) {
+    if (rawValue.trim() === '') return 0;
+    const parsed = Number(rawValue);
+    return Number.isFinite(parsed) ? Math.max(0, Math.floor(parsed)) : 0;
+  }
+
   function updateRate(key: keyof HonorarRates, value: number) {
     setRates((prev) => ({ ...prev, [key]: Math.max(0, value) }));
   }
@@ -104,8 +110,9 @@ export default function HonorarSettingsSection() {
                   <input
                     type="number"
                     min={0}
+                    step={1}
                     value={preset.dsCount}
-                    onChange={(e) => updatePresetField(preset.id, 'dsCount', parseNonNegativeNumber(e.target.value))}
+                    onChange={(e) => updatePresetField(preset.id, 'dsCount', parseNonNegativeInteger(e.target.value))}
                     className="w-16 px-2 py-1 border border-gray-200 rounded-md text-center text-sm"
                   />
                 </label>
@@ -114,8 +121,9 @@ export default function HonorarSettingsSection() {
                   <input
                     type="number"
                     min={0}
+                    step={1}
                     value={preset.klausurCount}
-                    onChange={(e) => updatePresetField(preset.id, 'klausurCount', parseNonNegativeNumber(e.target.value))}
+                    onChange={(e) => updatePresetField(preset.id, 'klausurCount', parseNonNegativeInteger(e.target.value))}
                     className="w-16 px-2 py-1 border border-gray-200 rounded-md text-center text-sm"
                   />
                 </label>

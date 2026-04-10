@@ -14,10 +14,10 @@ function formatEuro(value: number) {
   return `${value.toLocaleString('de-DE')} €`;
 }
 
-function parseNonNegativeNumber(rawValue: string) {
+function parseNonNegativeInteger(rawValue: string) {
   if (rawValue.trim() === '') return 0;
   const parsed = Number(rawValue);
-  return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+  return Number.isFinite(parsed) ? Math.max(0, Math.floor(parsed)) : 0;
 }
 
 function getKlausurRate(preset: Extract<BillingTypePreset, { kind: 'ds' }>, rates: HonorarRates) {
@@ -149,8 +149,9 @@ export default function HonorarView() {
                               <input
                                 type="number"
                                 min={0}
+                                step={1}
                                 value={item.dsCount}
-                                onChange={(e) => updateItem(preset.id, 'dsCount', parseNonNegativeNumber(e.target.value))}
+                                onChange={(e) => updateItem(preset.id, 'dsCount', parseNonNegativeInteger(e.target.value))}
                                 className="w-16 px-2 py-1 border border-gray-200 rounded-md text-center text-sm"
                               />
                             </span>
@@ -164,8 +165,9 @@ export default function HonorarView() {
                               <input
                                 type="number"
                                 min={0}
+                                step={1}
                                 value={item.klausurCount}
-                                onChange={(e) => updateItem(preset.id, 'klausurCount', parseNonNegativeNumber(e.target.value))}
+                                onChange={(e) => updateItem(preset.id, 'klausurCount', parseNonNegativeInteger(e.target.value))}
                                 className="w-16 px-2 py-1 border border-gray-200 rounded-md text-center text-sm"
                               />
                             </span>
