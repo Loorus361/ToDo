@@ -74,8 +74,12 @@ export default function AusbildungsverlaufView() {
   // rawSettings === undefined solange IndexedDB noch lädt; danach echte Werte
   const rawSettings = useLiveQuery(() => getSettings(), []);
   const [kampagnen, setKampagnen] = useState<Kampagne[]>(() => {
-    const storedModus = sessionStorage.getItem(MODUS_STORAGE_KEY) as 'aktuelle' | 'alle_laufenden' | null;
-    return loadKampagnen(storedModus ?? 'aktuelle');
+    try {
+      const storedModus = sessionStorage.getItem(MODUS_STORAGE_KEY) as 'aktuelle' | 'alle_laufenden' | null;
+      return loadKampagnen(storedModus ?? 'aktuelle');
+    } catch {
+      return loadKampagnen('aktuelle');
+    }
   });
   const [addYear, setAddYear] = useState(new Date().getFullYear());
   const [addMonthIdx, setAddMonthIdx] = useState(0);
@@ -90,19 +94,23 @@ export default function AusbildungsverlaufView() {
   useEffect(() => {
     if (rawSettings === undefined) return;
     const modus = rawSettings.defaultKampagnenModus ?? 'aktuelle';
-    const storedModus = sessionStorage.getItem(MODUS_STORAGE_KEY);
-    if (storedModus !== modus) {
-      const hasStoredKampagnen = sessionStorage.getItem(STORAGE_KEY) !== null;
-      if (!hasStoredKampagnen) {
-        setKampagnen(getDefaultKampagnen(modus).map((d, i) => ({ id: `k-${i}`, ...d })));
+    try {
+      const storedModus = sessionStorage.getItem(MODUS_STORAGE_KEY);
+      if (storedModus !== modus) {
+        const hasStoredKampagnen = sessionStorage.getItem(STORAGE_KEY) !== null;
+        if (!hasStoredKampagnen) {
+          setKampagnen(getDefaultKampagnen(modus).map((d, i) => ({ id: `k-${i}`, ...d })));
+        }
+        sessionStorage.setItem(MODUS_STORAGE_KEY, modus);
       }
-      sessionStorage.setItem(MODUS_STORAGE_KEY, modus);
-    }
+    } catch { /* ignore */ }
   }, [rawSettings]);
 
   // Kampagnen in sessionStorage persistieren (nur wenn Modus bereits gesetzt)
   useEffect(() => {
-    if (sessionStorage.getItem(MODUS_STORAGE_KEY) === null) return;
+    try {
+      if (sessionStorage.getItem(MODUS_STORAGE_KEY) === null) return;
+    } catch { return; }
     saveKampagnen(kampagnen);
   }, [kampagnen]);
 
