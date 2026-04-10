@@ -1,4 +1,4 @@
-import { Circle, FolderOpen, GraduationCap, LayoutDashboard, Save, Settings, Upload, Users } from 'lucide-react';
+import { Calculator, Circle, FolderOpen, GraduationCap, LayoutDashboard, Save, Settings, Upload, Users } from 'lucide-react';
 import { clsx } from 'clsx';
 import { NavLink } from 'react-router-dom';
 
@@ -7,6 +7,7 @@ const NAV_ITEMS: { to: string; label: string; icon: React.ReactNode }[] = [
   { to: '/projects', label: 'Projekte', icon: <FolderOpen size={18} /> },
   { to: '/contacts', label: 'Kontakte', icon: <Users size={18} /> },
   { to: '/ausbildung', label: 'Ausbildung', icon: <GraduationCap size={18} /> },
+  { to: '/honorar', label: 'Honorar', icon: <Calculator size={18} /> },
 ];
 
 interface AppSidebarProps {

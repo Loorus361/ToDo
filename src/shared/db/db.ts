@@ -56,6 +56,27 @@ export interface Milestone {
   order?: number;
 }
 
+/** Vergütungssätze in EUR */
+export interface HonorarRates {
+  doppelstunde: number;
+  klausur: number;
+  klkuKlausur: number;
+  ueberarbeitungInternet: number;
+  besprechungInternet: number;
+  ueberarbeitungAVL: number;
+  besichtigung: number;
+}
+
+/** DS-basiert oder Pauschale */
+export type BillingTypePreset =
+  | { kind: 'ds'; id: string; label: string; dsCount: number; klausurCount: number; klausurRateKey: 'klausur' | 'klkuKlausur' }
+  | { kind: 'flat'; id: string; label: string; rateKey: keyof HonorarRates };
+
+export interface HonorarConfig {
+  rates: HonorarRates;
+  presets: BillingTypePreset[];
+}
+
 export interface AppSettings {
   id?: number;
   deadlineRedDays: number;
@@ -65,6 +86,7 @@ export interface AppSettings {
   defaultTodoStatus?: 'backlog' | 'doing';
   lastAutoArchivedDate?: string;  // 'YYYY-MM-DD' – verhindert mehrfaches Auto-Archivieren am selben Tag
   defaultKampagnenModus?: 'aktuelle' | 'alle_laufenden';
+  honorarConfig?: HonorarConfig;
 }
 
 // ─── Projekt-Templates ────────────────────────────────────────────────────────
