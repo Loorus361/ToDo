@@ -3,11 +3,25 @@ import { Calculator } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useSettings } from '../../settings/hooks/useSettings';
 import { getHonorarConfig, calculateFee } from '../lib/honorarDefaults';
-import type { BillingTypePreset } from '../../../shared/db/db';
+import type { BillingTypePreset, HonorarRates } from '../../../shared/db/db';
 
 interface SelectedItem {
   dsCount: number;
   klausurCount: number;
+}
+
+function formatEuro(value: number) {
+  return `${value.toLocaleString('de-DE')} €`;
+}
+
+function parseNonNegativeNumber(rawValue: string) {
+  if (rawValue.trim() === '') return 0;
+  const parsed = Number(rawValue);
+  return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+}
+
+function getKlausurRate(preset: Extract<BillingTypePreset, { kind: 'ds' }>, rates: HonorarRates) {
+  return rates[preset.klausurRateKey];
 }
 
 export default function HonorarView() {
@@ -113,44 +127,58 @@ export default function HonorarView() {
               .map((preset) => {
                 const item = selected.get(preset.id)!;
                 const fee = calculateFee(preset, rates, item);
+                const klausurRate = preset.kind === 'ds' ? getKlausurRate(preset, rates) : 0;
+                const dsFee = item.dsCount * rates.doppelstunde;
+                const klausurFee = item.klausurCount * klausurRate;
 
                 return (
-                  <div key={preset.id} className="px-4 py-3 flex items-center justify-between gap-4">
+                  <div
+                    key={preset.id}
+                    className="px-4 py-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
+                  >
                     <span className="text-sm font-medium text-gray-900 min-w-[120px]">
                       {preset.label}
                     </span>
 
-                    {preset.kind === 'ds' ? (
-                      <div className="flex items-center gap-4 flex-1 justify-end">
-                        <label className="flex items-center gap-2 text-sm text-gray-600">
-                          DS
-                          <input
-                            type="number"
-                            min={0}
-                            value={item.dsCount}
-                            onChange={(e) => updateItem(preset.id, 'dsCount', Number(e.target.value))}
-                            className="w-16 px-2 py-1 border border-gray-200 rounded-md text-center text-sm"
-                          />
-                        </label>
-                        <label className="flex items-center gap-2 text-sm text-gray-600">
-                          Klausuren
-                          <input
-                            type="number"
-                            min={0}
-                            value={item.klausurCount}
-                            onChange={(e) => updateItem(preset.id, 'klausurCount', Number(e.target.value))}
-                            className="w-16 px-2 py-1 border border-gray-200 rounded-md text-center text-sm"
-                          />
-                        </label>
-                        <span className="text-sm font-semibold text-gray-900 w-24 text-right">
-                          {fee.toLocaleString('de-DE')} €
-                        </span>
+                    {preset.kind === 'ds' && (
+                      <div className="flex-1">
+                        <div className="flex flex-wrap gap-4 md:justify-end">
+                          <label className="flex flex-col gap-1 text-sm text-gray-600">
+                            <span className="flex items-center gap-2">
+                              <span>DS</span>
+                              <input
+                                type="number"
+                                min={0}
+                                value={item.dsCount}
+                                onChange={(e) => updateItem(preset.id, 'dsCount', parseNonNegativeNumber(e.target.value))}
+                                className="w-16 px-2 py-1 border border-gray-200 rounded-md text-center text-sm"
+                              />
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              x {formatEuro(rates.doppelstunde)} = {formatEuro(dsFee)}
+                            </span>
+                          </label>
+                          <label className="flex flex-col gap-1 text-sm text-gray-600">
+                            <span className="flex items-center gap-2">
+                              <span>Klausuren</span>
+                              <input
+                                type="number"
+                                min={0}
+                                value={item.klausurCount}
+                                onChange={(e) => updateItem(preset.id, 'klausurCount', parseNonNegativeNumber(e.target.value))}
+                                className="w-16 px-2 py-1 border border-gray-200 rounded-md text-center text-sm"
+                              />
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              x {formatEuro(klausurRate)} = {formatEuro(klausurFee)}
+                            </span>
+                          </label>
+                        </div>
                       </div>
-                    ) : (
-                      <span className="text-sm font-semibold text-gray-900">
-                        {fee.toLocaleString('de-DE')} €
-                      </span>
                     )}
+                    <span className="text-sm font-semibold text-gray-900 md:w-24 md:text-right">
+                      {formatEuro(fee)}
+                    </span>
                   </div>
                 );
               })}
@@ -162,7 +190,7 @@ export default function HonorarView() {
       <div className="bg-white border border-gray-100 rounded-xl px-4 py-4 flex items-center justify-between">
         <span className="text-sm font-semibold text-gray-900">Gesamt</span>
         <span className="text-lg font-bold text-primary-600">
-          {total.toLocaleString('de-DE')} €
+          {formatEuro(total)}
         </span>
       </div>
     </div>

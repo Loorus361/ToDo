@@ -29,6 +29,12 @@ export default function HonorarSettingsSection() {
     setPresets(c.presets);
   }, [settings]);
 
+  function parseNonNegativeNumber(rawValue: string) {
+    if (rawValue.trim() === '') return 0;
+    const parsed = Number(rawValue);
+    return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+  }
+
   function updateRate(key: keyof HonorarRates, value: number) {
     setRates((prev) => ({ ...prev, [key]: Math.max(0, value) }));
   }
@@ -71,7 +77,7 @@ export default function HonorarSettingsSection() {
                   type="number"
                   min={0}
                   value={rates[key]}
-                  onChange={(e) => updateRate(key, Number(e.target.value))}
+                  onChange={(e) => updateRate(key, parseNonNegativeNumber(e.target.value))}
                   className="w-20 px-2 py-1 border border-gray-200 rounded-md text-center text-sm"
                 />
                 <span className="text-xs text-gray-400">€</span>
@@ -99,7 +105,7 @@ export default function HonorarSettingsSection() {
                     type="number"
                     min={0}
                     value={preset.dsCount}
-                    onChange={(e) => updatePresetField(preset.id, 'dsCount', Number(e.target.value))}
+                    onChange={(e) => updatePresetField(preset.id, 'dsCount', parseNonNegativeNumber(e.target.value))}
                     className="w-16 px-2 py-1 border border-gray-200 rounded-md text-center text-sm"
                   />
                 </label>
@@ -109,7 +115,7 @@ export default function HonorarSettingsSection() {
                     type="number"
                     min={0}
                     value={preset.klausurCount}
-                    onChange={(e) => updatePresetField(preset.id, 'klausurCount', Number(e.target.value))}
+                    onChange={(e) => updatePresetField(preset.id, 'klausurCount', parseNonNegativeNumber(e.target.value))}
                     className="w-16 px-2 py-1 border border-gray-200 rounded-md text-center text-sm"
                   />
                 </label>
