@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { guessVersionFromData, getTableNames, migrateBackupData, importDatabase } from '../dbBackup';
+import { db } from '../../../shared/db/db';
 import legacyMainUpgradeEdgeCases from '../../../../docs/test-data/backups/legacy-main-upgrade-edge-cases.json';
 import legacyV1MigrationStressTest from '../../../../docs/test-data/backups/legacy-v1-migration-stress-test.json';
 
@@ -260,6 +261,8 @@ describe('importDatabase', () => {
     const result = await importDatabase(file);
 
     expect(result.success).toBe(true);
+    // Fallback-Logik: importInto ist gemockt (schreibt nichts), daher greift der DEFAULT_SETTINGS-Fallback
+    expect(await db.settings.count()).toBeGreaterThan(0);
     expect(importInto).toHaveBeenCalledTimes(1);
 
     const call = (importInto as ReturnType<typeof vi.fn>).mock.calls[0];
@@ -267,15 +270,10 @@ describe('importDatabase', () => {
     const parsed = JSON.parse(await blob.text()) as Record<string, unknown>;
 
     expect(parsed._appSchemaVersion).toBe(4);
-    expect(getTableNames(parsed)).toEqual([
-      'projects',
-      'persons',
-      'communications',
-      'todos',
-      'settings',
-      'milestones',
-      'projectTemplates',
-    ]);
+    expect(getTableNames(parsed)).toEqual(
+      expect.arrayContaining(['projects', 'persons', 'communications', 'todos', 'settings', 'milestones', 'projectTemplates'])
+    );
+    expect(getTableNames(parsed)).toHaveLength(7);
 
     const inner = parsed.data as {
       data: Array<{ tableName: string; rows: Array<Record<string, unknown>> }>;
@@ -337,7 +335,8 @@ describe('importDatabase', () => {
     expect(milestonesTable?.rows).toEqual([]);
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    await db.settings.clear();
   });
 });

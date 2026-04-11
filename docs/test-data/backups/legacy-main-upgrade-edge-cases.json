@@ -5,7 +5,7 @@
   "_exportedAt": "2026-04-10T07:30:00.000Z",
   "data": {
     "databaseName": "todo-manager-db",
-    "databaseVersion": 50,
+    "databaseVersion": 40,
     "tables": [
       { "name": "projects", "schema": "++id,title,deadline", "rowCount": 4 },
       { "name": "persons", "schema": "++id,name", "rowCount": 6 },
