@@ -50,7 +50,7 @@ Geeignet für:
 
 Manuell:
 - Datei über die Import-Funktion der App laden
-- anschließend die Schritte aus [release-smoke-test-beta-to-main.md](../testing/release-smoke-test-beta-to-main.md) durchgehen
+- anschließend die Schritte aus [release-smoke-test-beta-to-main.md](../../testing/release-smoke-test-beta-to-main.md) durchgehen
 
 Automatisiert:
 - Fixtures in Unit-/Integrationstests einlesen

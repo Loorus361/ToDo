@@ -3,7 +3,7 @@
 Ziel: In 10 bis 15 Minuten prüfen, ob der Stand aus `beta` mit einem realistischen Alt-Backup aus `main` stabil läuft und keine offensichtlichen Regressionen enthält.
 
 Verwendete Testdatei:
-- [legacy-main-upgrade-edge-cases.json](/Users/carlosanderssohn/Claude/Arbeit/ToDo-Manager/docs/test-data/backups/legacy-main-upgrade-edge-cases.json)
+- [legacy-main-upgrade-edge-cases.json](../test-data/backups/legacy-main-upgrade-edge-cases.json)
 
 Wichtige Annahme:
 - Die Backup-Datei simuliert einen Export aus dem älteren `main`-Stand.
