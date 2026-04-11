@@ -37,6 +37,10 @@ git switch beta
 git pull --ff-only origin beta
 ```
 
+Erklärung:
+- `git switch <ziel-branch>`: wechselt auf den Ziel-Branch
+- `git pull --ff-only origin <ziel-branch>`: holt den neuesten Stand vom Remote, ohne Merge-Commit
+
 Wenn `beta` das falsche Remote tracked:
 
 ```bash
@@ -49,11 +53,25 @@ git branch --set-upstream-to=origin/beta beta
 git show 4d458e37384f92159b36a8c94d1a42b30e6f0d70 -- AGENTS.md
 ```
 
+Erklärung:
+- `git log --oneline -- <datei>`: zeigt kompakte Commit-Historie für eine bestimmte Datei
+
+### Optional: Commit-Historie ansehen
+
+```bash
+git log --oneline -- AGENTS.md
+```
+
+- `git show <commit-hash>`: zeigt die genauen Änderungen dieses Commits
+
 ### 3. Cherry-pick ausfuehren
 
 ```bash
 git cherry-pick 4d458e37384f92159b36a8c94d1a42b30e6f0d70
 ```
+
+Erklärung:
+- `git cherry-pick <commit-hash>`: übernimmt genau diesen Commit auf den aktuellen Branch
 
 ### 4. Ergebnis kontrollieren
 
@@ -62,17 +80,26 @@ git status -sb
 git show --stat
 ```
 
+Erklärung:
+- `git status -sb`: zeigt kurz den Status und Branch-Tracking
+- `git show --stat`: zeigt den letzten Commit inkl. geänderter Dateien
+
 Sinnvoll ist auch:
 
 ```bash
 git diff HEAD~1 HEAD -- AGENTS.md
 ```
 
+- `git diff HEAD~1 HEAD -- <datei>`: zeigt die Änderung des letzten Commits für eine bestimmte Datei
+
 ### 5. Nach `origin/beta` pushen
 
 ```bash
 git push origin beta
 ```
+
+Erklärung:
+- `git push origin <ziel-branch>`: überträgt deine Änderungen zum Remote-Repository
 
 ## Typische Fallstricke
 
@@ -94,6 +121,10 @@ git stash push -u -m "before cherry-pick agents"
 git cherry-pick 4d458e37384f92159b36a8c94d1a42b30e6f0d70
 git stash pop
 ```
+
+Erklärung:
+- `git stash push -u`: speichert lokale Änderungen temporär (inkl. untracked files)
+- `git stash pop`: stellt die Änderungen wieder her
 
 ### 2. Konflikt in `AGENTS.md`
 
@@ -119,11 +150,17 @@ git add AGENTS.md
 git cherry-pick --continue
 ```
 
+Erklärung:
+- `git add <datei>`: markiert Konflikt als gelöst
+- `git cherry-pick --continue`: setzt den Cherry-Pick fort
+
 Wenn du abbrechen willst:
 
 ```bash
 git cherry-pick --abort
 ```
+
+- `git cherry-pick --abort`: bricht den Vorgang ab und stellt den alten Zustand wieder her
 
 ### 3. Falscher Branch oder falsches Tracking
 
@@ -178,6 +215,10 @@ Loesung:
 git pull --ff-only origin beta
 git push origin beta
 ```
+
+Erklärung:
+- `git pull --ff-only`: synchronisiert erst lokal mit Remote
+- `git push`: versucht danach erneut zu pushen
 
 Wenn `--ff-only` nicht geht, erst schauen, was auf `origin/beta` passiert ist:
 
