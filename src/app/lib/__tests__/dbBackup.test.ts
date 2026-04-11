@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { guessVersionFromData, getTableNames, migrateBackupData, importDatabase } from '../dbBackup';
+import { db } from '../../../shared/db/db';
+import legacyMainUpgradeEdgeCases from '../../../../docs/test-data/backups/legacy-main-upgrade-edge-cases.json';
+import legacyV1MigrationStressTest from '../../../../docs/test-data/backups/legacy-v1-migration-stress-test.json';
 
 // Mock dexie-export-import — `importInto` nutzt FileReader/ArrayBuffer,
 // die in Node.js nicht verfügbar sind. Wir testen unsere eigene Logik
@@ -247,7 +250,93 @@ describe('importDatabase', () => {
     expect(tables).toContain('milestones');
   });
 
-  beforeEach(() => {
+  it('akzeptiert das main-nahe Upgrade-Backup mit fehlenden neuen settings-Feldern', async () => {
+    const { importInto } = await import('dexie-export-import');
+    const exportData = structuredClone(legacyMainUpgradeEdgeCases) as Record<string, unknown>;
+
+    const file = new File([JSON.stringify(exportData)], 'legacy-main-upgrade-edge-cases.json', {
+      type: 'application/json',
+    });
+
+    const result = await importDatabase(file);
+
+    expect(result.success).toBe(true);
+    // Fallback-Logik: importInto ist gemockt (schreibt nichts), daher greift der DEFAULT_SETTINGS-Fallback
+    expect(await db.settings.count()).toBeGreaterThan(0);
+    expect(importInto).toHaveBeenCalledTimes(1);
+
+    const call = (importInto as ReturnType<typeof vi.fn>).mock.calls[0];
+    const blob = call[1] as Blob;
+    const parsed = JSON.parse(await blob.text()) as Record<string, unknown>;
+
+    expect(parsed._appSchemaVersion).toBe(4);
+    expect(getTableNames(parsed)).toEqual(
+      expect.arrayContaining(['projects', 'persons', 'communications', 'todos', 'settings', 'milestones', 'projectTemplates'])
+    );
+    expect(getTableNames(parsed)).toHaveLength(7);
+
+    const inner = parsed.data as {
+      data: Array<{ tableName: string; rows: Array<Record<string, unknown>> }>;
+    };
+    const settingsTable = inner.data.find((t) => t.tableName === 'settings');
+    expect(settingsTable?.rows).toHaveLength(1);
+    expect(settingsTable?.rows[0]).not.toHaveProperty('defaultKampagnenModus');
+    expect(settingsTable?.rows[0]).not.toHaveProperty('honorarConfig');
+  });
+
+  it('migriert das v1-Stress-Backup auf den erwarteten v4-Importstand', async () => {
+    const { importInto } = await import('dexie-export-import');
+    const exportData = structuredClone(legacyV1MigrationStressTest) as Record<string, unknown>;
+
+    expect(guessVersionFromData(exportData)).toBe(1);
+
+    const file = new File([JSON.stringify(exportData)], 'legacy-v1-migration-stress-test.json', {
+      type: 'application/json',
+    });
+
+    const result = await importDatabase(file);
+
+    expect(result.success).toBe(true);
+    expect(importInto).toHaveBeenCalledTimes(1);
+
+    const call = (importInto as ReturnType<typeof vi.fn>).mock.calls[0];
+    const blob = call[1] as Blob;
+    const parsed = JSON.parse(await blob.text()) as Record<string, unknown>;
+
+    expect(parsed._appSchemaVersion).toBe(4);
+
+    const tables = getTableNames(parsed);
+    expect(tables).toContain('settings');
+    expect(tables).toContain('milestones');
+    expect(tables).not.toContain('projectTemplates');
+
+    const inner = parsed.data as {
+      databaseVersion: number;
+      tables: Array<{ name: string; schema: string }>;
+      data: Array<{ tableName: string; rows: Array<Record<string, unknown>> }>;
+    };
+
+    expect(inner.databaseVersion).toBe(40);
+
+    const todosSchema = inner.tables.find((t) => t.name === 'todos');
+    expect(todosSchema?.schema).toBe('++id,title,status,deadline,projectId,commId');
+
+    const todosTable = inner.data.find((t) => t.tableName === 'todos');
+    expect(todosTable).toBeDefined();
+    for (const row of todosTable!.rows) {
+      expect(row.status).not.toBe('backlog-low');
+      expect(row).not.toHaveProperty('startDate');
+      expect(row).not.toHaveProperty('startAfterId');
+    }
+
+    const settingsTable = inner.data.find((t) => t.tableName === 'settings');
+    const milestonesTable = inner.data.find((t) => t.tableName === 'milestones');
+    expect(settingsTable?.rows).toEqual([]);
+    expect(milestonesTable?.rows).toEqual([]);
+  });
+
+  beforeEach(async () => {
     vi.clearAllMocks();
+    await db.settings.clear();
   });
 });

@@ -175,9 +175,8 @@ export function migrateBackupData(data: Record<string, unknown>, fromVersion: nu
   }
 
   // DB-Version im Export auf aktuellen Stand setzen
-  const dbs = inner.databaseName ? inner : inner;
-  if (typeof (dbs as Record<string, unknown>).databaseVersion === 'number') {
-    (dbs as Record<string, unknown>).databaseVersion = CURRENT_SCHEMA_VERSION * 10;
+  if (typeof inner.databaseVersion === 'number') {
+    inner.databaseVersion = CURRENT_SCHEMA_VERSION * 10;
   }
 
   // Metadaten aktualisieren
