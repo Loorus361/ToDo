@@ -1,7 +1,7 @@
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { guessVersionFromData, getTableNames, migrateBackupData, importDatabase } from '../dbBackup';
+import legacyMainUpgradeEdgeCases from '../../../../docs/test-data/backups/legacy-main-upgrade-edge-cases.json';
+import legacyV1MigrationStressTest from '../../../../docs/test-data/backups/legacy-v1-migration-stress-test.json';
 
 // Mock dexie-export-import — `importInto` nutzt FileReader/ArrayBuffer,
 // die in Node.js nicht verfügbar sind. Wir testen unsere eigene Logik
@@ -45,12 +45,6 @@ function makeDexieExport(
       data,
     },
   };
-}
-
-async function loadFixture(name: string): Promise<Record<string, unknown>> {
-  const fixturePath = path.join(process.cwd(), 'docs', 'test-data', 'backups', name);
-  const text = await readFile(fixturePath, 'utf8');
-  return JSON.parse(text) as Record<string, unknown>;
 }
 
 // ─── getTableNames ───────────────────────────────────────────────────────────
@@ -257,7 +251,7 @@ describe('importDatabase', () => {
 
   it('akzeptiert das main-nahe Upgrade-Backup mit fehlenden neuen settings-Feldern', async () => {
     const { importInto } = await import('dexie-export-import');
-    const exportData = await loadFixture('legacy-main-upgrade-edge-cases.json');
+    const exportData = structuredClone(legacyMainUpgradeEdgeCases) as Record<string, unknown>;
 
     const file = new File([JSON.stringify(exportData)], 'legacy-main-upgrade-edge-cases.json', {
       type: 'application/json',
@@ -294,7 +288,7 @@ describe('importDatabase', () => {
 
   it('migriert das v1-Stress-Backup auf den erwarteten v4-Importstand', async () => {
     const { importInto } = await import('dexie-export-import');
-    const exportData = await loadFixture('legacy-v1-migration-stress-test.json');
+    const exportData = structuredClone(legacyV1MigrationStressTest) as Record<string, unknown>;
 
     expect(guessVersionFromData(exportData)).toBe(1);
 
