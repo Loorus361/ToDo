@@ -8,21 +8,21 @@ import {
   TOTAL_QUARTERS,
   KAMPAGNE_LABELS,
   KAMPAGNE_MONATE,
-  getDefaultKampagnen,
   type StationBlock,
 } from '../lib/ausbildungsPhasen';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { getSettings } from '../../settings/data/settings';
+import { useSettings } from '../../settings/hooks/useSettings';
+import {
+  getAnzuzeigendeKampagnen,
+  getGespeicherteKampagnenauswahl,
+  normalizeKampagnenModus,
+  saveKampagnenauswahl,
+  type KampagnenAuswahlItem,
+} from '../data/kampagnenSettings';
 
-interface Kampagne {
+interface Kampagne extends KampagnenAuswahlItem {
   id: string;
-  label: string;
-  t0Year: number;
-  t0Month: number; // 0-basiert (JS Date)
 }
 
-const STORAGE_KEY = 'ausbildung-kampagnen';
-const MODUS_STORAGE_KEY = 'ausbildung-kampagnen-modus';
 const LABEL_WIDTH = 120;
 const MONTH_NAMES = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
 const WIDTH_BY_SCALE = {
@@ -50,70 +50,38 @@ function sortKampagnenByStart(items: Kampagne[]): Kampagne[] {
   });
 }
 
-function loadKampagnen(modus: 'aktuelle' | 'alle_laufenden' = 'aktuelle'): Kampagne[] {
-  try {
-    const stored = sessionStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored) as Kampagne[];
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch { /* ignore */ }
-
-  // Fallback: Default-Kampagnen anhand des Settings-Modus erzeugen
-  const defaults = getDefaultKampagnen(modus);
-  return defaults.map((d, i) => ({ id: `k-${i}`, ...d }));
+function toKampagneId(kampagne: KampagnenAuswahlItem): string {
+  return `${kampagne.t0Year}-${kampagne.t0Month}`;
 }
 
-function saveKampagnen(kampagnen: Kampagne[]): void {
-  try {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(kampagnen));
-  } catch { /* ignore */ }
+function toViewKampagnen(items: KampagnenAuswahlItem[]): Kampagne[] {
+  return items.map((kampagne) => ({
+    ...kampagne,
+    id: toKampagneId(kampagne),
+  }));
+}
+
+function sortGespeicherteAuswahl(items: KampagnenAuswahlItem[]): KampagnenAuswahlItem[] {
+  return sortKampagnenByStart(toViewKampagnen(items)).map(({ id: _id, ...kampagne }) => kampagne);
 }
 
 export default function AusbildungsverlaufView() {
   const scrollRef = useRef<HTMLDivElement>(null);
-  // rawSettings === undefined solange IndexedDB noch lädt; danach echte Werte
-  const rawSettings = useLiveQuery(() => getSettings(), []);
-  const [kampagnen, setKampagnen] = useState<Kampagne[]>(() => {
-    try {
-      const storedModus = sessionStorage.getItem(MODUS_STORAGE_KEY) as 'aktuelle' | 'alle_laufenden' | null;
-      return loadKampagnen(storedModus ?? 'aktuelle');
-    } catch {
-      return loadKampagnen('aktuelle');
-    }
-  });
+  const settings = useSettings();
   const [addYear, setAddYear] = useState(new Date().getFullYear());
   const [addMonthIdx, setAddMonthIdx] = useState(0);
   const [scale, setScale] = useState<ScaleOption>('mittel');
   const [scrollLeft, setScrollLeft] = useState(0);
-  const sortedKampagnen = useMemo(() => sortKampagnenByStart(kampagnen), [kampagnen]);
-
-  // Modus aus Settings anwenden – läuft bei jedem rawSettings-Wechsel.
-  // Kampagnen werden nur zurückgesetzt, wenn noch keine User-Auswahl in der Session
-  // gespeichert ist (erstes Öffnen). Danach wird nur der gespeicherte Modus aktualisiert,
-  // damit spätere Sessions den neuen Modus als Default nutzen – ohne aktuelle Kampagnen zu überschreiben.
-  useEffect(() => {
-    if (rawSettings === undefined) return;
-    const modus = rawSettings.defaultKampagnenModus ?? 'aktuelle';
-    try {
-      const storedModus = sessionStorage.getItem(MODUS_STORAGE_KEY);
-      if (storedModus !== modus) {
-        const hasStoredKampagnen = sessionStorage.getItem(STORAGE_KEY) !== null;
-        if (!hasStoredKampagnen) {
-          setKampagnen(getDefaultKampagnen(modus).map((d, i) => ({ id: `k-${i}`, ...d })));
-        }
-        sessionStorage.setItem(MODUS_STORAGE_KEY, modus);
-      }
-    } catch { /* ignore */ }
-  }, [rawSettings]);
-
-  // Kampagnen in sessionStorage persistieren (nur wenn Modus bereits gesetzt)
-  useEffect(() => {
-    try {
-      if (sessionStorage.getItem(MODUS_STORAGE_KEY) === null) return;
-    } catch { return; }
-    saveKampagnen(kampagnen);
-  }, [kampagnen]);
+  const kampagnenModus = normalizeKampagnenModus(settings.defaultKampagnenModus);
+  const istNutzerauswahl = kampagnenModus === 'nutzerauswahl';
+  const gespeicherteKampagnen = useMemo(
+    () => getGespeicherteKampagnenauswahl(settings),
+    [settings.kampagnenAuswahl],
+  );
+  const sortedKampagnen = useMemo(
+    () => sortKampagnenByStart(toViewKampagnen(getAnzuzeigendeKampagnen(settings))),
+    [settings.defaultKampagnenModus, settings.kampagnenAuswahl],
+  );
 
   // Scroll-Position für mitscrollende Labels verfolgen
   useEffect(() => {
@@ -132,18 +100,27 @@ export default function AusbildungsverlaufView() {
     el.scrollLeft = Math.max(0, targetScroll);
   }, [sortedKampagnen]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const addKampagne = useCallback(() => {
+  const addKampagne = useCallback(async () => {
+    if (!istNutzerauswahl) return;
+
     const m = KAMPAGNE_MONATE[addMonthIdx];
     const label = `${KAMPAGNE_LABELS[addMonthIdx]} ${addYear}`;
-    setKampagnen(prev => {
-      if (prev.some(k => k.t0Year === addYear && k.t0Month === m)) return prev;
-      return sortKampagnenByStart([...prev, { id: `k-${Date.now()}`, label, t0Year: addYear, t0Month: m }]);
-    });
-  }, [addMonthIdx, addYear]);
+    if (gespeicherteKampagnen.some(k => k.t0Year === addYear && k.t0Month === m)) return;
 
-  const removeKampagne = useCallback((id: string) => {
-    setKampagnen(prev => prev.filter(k => k.id !== id));
-  }, []);
+    await saveKampagnenauswahl(sortGespeicherteAuswahl([
+      ...gespeicherteKampagnen,
+      { label, t0Year: addYear, t0Month: m },
+    ]));
+  }, [addMonthIdx, addYear, gespeicherteKampagnen, istNutzerauswahl]);
+
+  const removeKampagne = useCallback(async (id: string) => {
+    if (!istNutzerauswahl) return;
+
+    const next = gespeicherteKampagnen.filter((kampagne) => toKampagneId(kampagne) !== id);
+    if (next.length === 0) return;
+
+    await saveKampagnenauswahl(sortGespeicherteAuswahl(next));
+  }, [gespeicherteKampagnen, istNutzerauswahl]);
 
   // Berechne den globalen Zeitraum (frühester Start bis spätestes Ende)
   const { globalStartQuarter, totalQuarters, months } = useMemo(() => {
@@ -197,11 +174,25 @@ export default function AusbildungsverlaufView() {
         </div>
 
         {/* Kampagne hinzufügen */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            <div className="text-xs font-medium text-gray-500">
+              {istNutzerauswahl ? 'Modus: Nutzerauswahl' : 'Modus: Alle laufenden'}
+            </div>
+            <div className="text-xs text-gray-400">
+              {istNutzerauswahl
+                ? 'Diese Auswahl wird dauerhaft gespeichert.'
+                : 'Zum Bearbeiten der Auswahl in den Einstellungen auf Nutzerauswahl wechseln.'}
+            </div>
+          </div>
           <select
             value={addMonthIdx}
             onChange={e => setAddMonthIdx(Number(e.target.value))}
-            className="text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white"
+            disabled={!istNutzerauswahl}
+            className={clsx(
+              'text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white',
+              !istNutzerauswahl && 'opacity-60 cursor-not-allowed',
+            )}
           >
             {KAMPAGNE_LABELS.map((l, i) => (
               <option key={l} value={i}>{l}</option>
@@ -211,13 +202,23 @@ export default function AusbildungsverlaufView() {
             type="number"
             value={addYear}
             onChange={e => setAddYear(Number(e.target.value))}
-            className="text-sm border border-gray-200 rounded-md px-2 py-1.5 w-20 bg-white"
+            disabled={!istNutzerauswahl}
+            className={clsx(
+              'text-sm border border-gray-200 rounded-md px-2 py-1.5 w-20 bg-white',
+              !istNutzerauswahl && 'opacity-60 cursor-not-allowed',
+            )}
             min={2020}
             max={2035}
           />
           <button
             onClick={addKampagne}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-primary-600 bg-primary-50 rounded-md hover:bg-primary-100 transition-colors"
+            disabled={!istNutzerauswahl}
+            className={clsx(
+              'flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+              istNutzerauswahl
+                ? 'text-primary-600 bg-primary-50 hover:bg-primary-100'
+                : 'text-gray-400 bg-gray-100 cursor-not-allowed',
+            )}
           >
             <Plus size={14} />
             Kampagne
@@ -320,6 +321,7 @@ export default function AusbildungsverlaufView() {
                 layerCount={layerCount}
                 quarterColWidth={quarterColWidth}
                 scrollLeft={scrollLeft}
+                canRemove={istNutzerauswahl && sortedKampagnen.length > 1}
                 onRemove={() => removeKampagne(kampagne.id)}
               />
             ))}
@@ -337,6 +339,7 @@ function KampagneRow({
   layerCount,
   quarterColWidth,
   scrollLeft,
+  canRemove,
   onRemove,
 }: {
   kampagne: Kampagne;
@@ -345,6 +348,7 @@ function KampagneRow({
   layerCount: number;
   quarterColWidth: number;
   scrollLeft: number;
+  canRemove: boolean;
   onRemove: () => void;
 }) {
   const [hoveredBlock, setHoveredBlock] = useState<StationBlock | null>(null);
@@ -363,13 +367,15 @@ function KampagneRow({
             <div>
               <div className="text-sm font-medium text-gray-900">{kampagne.label}</div>
             </div>
-            <button
-              onClick={onRemove}
-              className="text-gray-300 hover:text-red-500 transition-colors"
-              title="Kampagne entfernen"
-            >
-              <X size={14} />
-            </button>
+            {canRemove ? (
+              <button
+                onClick={onRemove}
+                className="text-gray-300 hover:text-red-500 transition-colors"
+                title="Kampagne entfernen"
+              >
+                <X size={14} />
+              </button>
+            ) : null}
           </div>
         </div>
 

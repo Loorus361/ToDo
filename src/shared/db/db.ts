@@ -78,6 +78,12 @@ export interface HonorarConfig {
   presets: BillingTypePreset[];
 }
 
+export interface KampagnenAuswahlItem {
+  label: string;
+  t0Year: number;
+  t0Month: number;
+}
+
 export interface AppSettings {
   id?: number;
   deadlineRedDays: number;
@@ -86,7 +92,8 @@ export interface AppSettings {
   bgStyle?: string;               // 'light'|'warm'|'slate'
   defaultTodoStatus?: 'backlog' | 'doing';
   lastAutoArchivedDate?: string;  // 'YYYY-MM-DD' – verhindert mehrfaches Auto-Archivieren am selben Tag
-  defaultKampagnenModus?: 'aktuelle' | 'alle_laufenden';
+  defaultKampagnenModus?: 'aktuelle' | 'nutzerauswahl' | 'alle_laufenden'; // 'aktuelle' ist Legacy, wird beim Lesen zu 'nutzerauswahl' normalisiert
+  kampagnenAuswahl?: KampagnenAuswahlItem[];
   honorarConfig?: HonorarConfig;
 }
 
@@ -119,7 +126,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   accentColor: 'blue',
   bgStyle: 'light',
   defaultTodoStatus: 'backlog',
-  defaultKampagnenModus: 'aktuelle',
+  defaultKampagnenModus: 'nutzerauswahl',
 };
 
 // ─── DB-Klasse ────────────────────────────────────────────────────────────────
