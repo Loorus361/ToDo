@@ -84,12 +84,19 @@ describe('guessVersionFromData', () => {
     ]);
     expect(guessVersionFromData(data)).toBe(3);
   });
+
+  it('erkennt Version 5 (projectTemplates vorhanden)', () => {
+    const data = makeDexieExport([
+      'projects', 'persons', 'communications', 'todos', 'settings', 'milestones', 'projectTemplates',
+    ]);
+    expect(guessVersionFromData(data)).toBe(5);
+  });
 });
 
 // ─── migrateBackupData ───────────────────────────────────────────────────────
 
 describe('migrateBackupData', () => {
-  it('migriert v1→v4: fügt settings + milestones hinzu', () => {
+  it('migriert v1→v5: fügt settings + milestones + projectTemplates hinzu', () => {
     const data = makeDexieExport(
       ['projects', 'persons', 'communications', 'todos'],
       { databaseVersion: 10 },
@@ -100,10 +107,11 @@ describe('migrateBackupData', () => {
     const tables = getTableNames(data);
     expect(tables).toContain('settings');
     expect(tables).toContain('milestones');
-    expect(data._appSchemaVersion).toBe(4);
+    expect(tables).toContain('projectTemplates');
+    expect(data._appSchemaVersion).toBe(5);
   });
 
-  it('migriert v3→v4: backlog-low → backlog', () => {
+  it('migriert v3→v5: backlog-low → backlog und aktualisiert das Todos-Schema', () => {
     const data = makeDexieExport(
       ['projects', 'persons', 'communications', 'todos', 'settings', 'milestones'],
       {
@@ -140,10 +148,11 @@ describe('migrateBackupData', () => {
 
     // Schema wurde aktualisiert
     const todosSchema = inner.tables.find((t: { name: string }) => t.name === 'todos');
-    expect(todosSchema.schema).toBe('++id,title,status,deadline,projectId,commId');
+    expect(todosSchema.schema).toBe('++id,title,status,deadline,projectId,commId,completedAt');
+    expect(getTableNames(data)).toContain('projectTemplates');
   });
 
-  it('migriert v2→v4: fügt milestones hinzu + migriert todos', () => {
+  it('migriert v2→v5: fügt milestones + projectTemplates hinzu und migriert todos', () => {
     const data = makeDexieExport(
       ['projects', 'persons', 'communications', 'todos', 'settings'],
       {
@@ -160,11 +169,32 @@ describe('migrateBackupData', () => {
 
     const tables = getTableNames(data);
     expect(tables).toContain('milestones');
+    expect(tables).toContain('projectTemplates');
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const inner = data.data as any;
     const todosTable = inner.data.find((t: { tableName: string }) => t.tableName === 'todos');
     expect(todosTable.rows[0].status).toBe('backlog');
+  });
+
+  it('migriert v4→v5: fügt projectTemplates hinzu und ergänzt completedAt im Todos-Schema', () => {
+    const data = makeDexieExport(
+      ['projects', 'persons', 'communications', 'todos', 'settings', 'milestones'],
+      {
+        schemas: {
+          todos: '++id,title,status,deadline,projectId,commId',
+        },
+        databaseVersion: 40,
+      },
+    );
+
+    migrateBackupData(data, 4);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const inner = data.data as any;
+    expect(getTableNames(data)).toContain('projectTemplates');
+    expect(inner.tables.find((t: { name: string }) => t.name === 'todos')?.schema)
+      .toBe('++id,title,status,deadline,projectId,commId,completedAt');
   });
 
   it('aktualisiert databaseVersion auf aktuellen Stand', () => {
@@ -177,7 +207,7 @@ describe('migrateBackupData', () => {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const inner = data.data as any;
-    expect(inner.databaseVersion).toBe(40); // CURRENT_SCHEMA_VERSION (4) * 10
+    expect(inner.databaseVersion).toBe(50); // CURRENT_SCHEMA_VERSION (5) * 10
   });
 
   it('fügt Tabellen nicht doppelt hinzu wenn sie bereits existieren', () => {
@@ -244,10 +274,11 @@ describe('importDatabase', () => {
     const parsed = JSON.parse(text);
 
     // Migration wurde durchgeführt
-    expect(parsed._appSchemaVersion).toBe(4);
+    expect(parsed._appSchemaVersion).toBe(5);
     const tables = getTableNames(parsed);
     expect(tables).toContain('settings');
     expect(tables).toContain('milestones');
+    expect(tables).toContain('projectTemplates');
   });
 
   it('akzeptiert das main-nahe Upgrade-Backup mit fehlenden neuen settings-Feldern', async () => {
@@ -269,7 +300,7 @@ describe('importDatabase', () => {
     const blob = call[1] as Blob;
     const parsed = JSON.parse(await blob.text()) as Record<string, unknown>;
 
-    expect(parsed._appSchemaVersion).toBe(4);
+    expect(parsed._appSchemaVersion).toBe(5);
     expect(getTableNames(parsed)).toEqual(
       expect.arrayContaining(['projects', 'persons', 'communications', 'todos', 'settings', 'milestones', 'projectTemplates'])
     );
@@ -284,7 +315,7 @@ describe('importDatabase', () => {
     expect(settingsTable?.rows[0]).not.toHaveProperty('honorarConfig');
   });
 
-  it('migriert das v1-Stress-Backup auf den erwarteten v4-Importstand', async () => {
+  it('migriert das v1-Stress-Backup auf den erwarteten v5-Importstand', async () => {
     const { importInto } = await import('dexie-export-import');
     const exportData = structuredClone(legacyV1MigrationStressTest) as Record<string, unknown>;
 
@@ -303,12 +334,12 @@ describe('importDatabase', () => {
     const blob = call[1] as Blob;
     const parsed = JSON.parse(await blob.text()) as Record<string, unknown>;
 
-    expect(parsed._appSchemaVersion).toBe(4);
+    expect(parsed._appSchemaVersion).toBe(5);
 
     const tables = getTableNames(parsed);
     expect(tables).toContain('settings');
     expect(tables).toContain('milestones');
-    expect(tables).not.toContain('projectTemplates');
+    expect(tables).toContain('projectTemplates');
 
     const inner = parsed.data as {
       databaseVersion: number;
@@ -316,10 +347,10 @@ describe('importDatabase', () => {
       data: Array<{ tableName: string; rows: Array<Record<string, unknown>> }>;
     };
 
-    expect(inner.databaseVersion).toBe(40);
+    expect(inner.databaseVersion).toBe(50);
 
     const todosSchema = inner.tables.find((t) => t.name === 'todos');
-    expect(todosSchema?.schema).toBe('++id,title,status,deadline,projectId,commId');
+    expect(todosSchema?.schema).toBe('++id,title,status,deadline,projectId,commId,completedAt');
 
     const todosTable = inner.data.find((t) => t.tableName === 'todos');
     expect(todosTable).toBeDefined();
@@ -331,8 +362,10 @@ describe('importDatabase', () => {
 
     const settingsTable = inner.data.find((t) => t.tableName === 'settings');
     const milestonesTable = inner.data.find((t) => t.tableName === 'milestones');
+    const projectTemplatesTable = inner.data.find((t) => t.tableName === 'projectTemplates');
     expect(settingsTable?.rows).toEqual([]);
     expect(milestonesTable?.rows).toEqual([]);
+    expect(projectTemplatesTable?.rows).toEqual([]);
   });
 
   beforeEach(async () => {

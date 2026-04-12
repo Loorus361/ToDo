@@ -2,7 +2,7 @@ import { exportDB, importInto } from 'dexie-export-import';
 import { db, DEFAULT_SETTINGS } from '../../shared/db/db';
 
 /** Aktuelle Schema-Version – muss mit db.ts übereinstimmen. */
-const CURRENT_SCHEMA_VERSION = 4;
+const CURRENT_SCHEMA_VERSION = 5;
 
 /**
  * Exportiert die gesamte Datenbank als JSON-Datei und löst den Browser-Download aus.
@@ -98,6 +98,7 @@ export async function importDatabase(file: File): Promise<{ success: boolean; er
  */
 export function guessVersionFromData(data: Record<string, unknown>): number {
   const tables = getTableNames(data);
+  if (tables.includes('projectTemplates')) return 5;
   if (tables.includes('milestones')) return 3;
   if (tables.includes('settings')) return 2;
   return 1;
@@ -170,6 +171,18 @@ export function migrateBackupData(data: Record<string, unknown>, fromVersion: nu
       const entry = databasesArr.find((t) => t.name === 'todos');
       if (entry) {
         entry.schema = '++id,title,status,deadline,projectId,commId';
+      }
+    }
+  }
+
+  // v4 → v5: projectTemplates-Tabelle + completedAt-Index für Todos
+  if (fromVersion < 5) {
+    ensureTable('projectTemplates', '++id,name');
+
+    if (databasesArr) {
+      const entry = databasesArr.find((t) => t.name === 'todos');
+      if (entry) {
+        entry.schema = '++id,title,status,deadline,projectId,commId,completedAt';
       }
     }
   }

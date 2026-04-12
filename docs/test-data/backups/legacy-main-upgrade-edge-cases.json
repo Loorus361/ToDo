@@ -1,11 +1,11 @@
 {
   "formatName": "dexie",
   "formatVersion": 1,
-  "_appSchemaVersion": 4,
+  "_appSchemaVersion": 5,
   "_exportedAt": "2026-04-10T07:30:00.000Z",
   "data": {
     "databaseName": "todo-manager-db",
-    "databaseVersion": 40,
+    "databaseVersion": 50,
     "tables": [
       { "name": "projects", "schema": "++id,title,deadline", "rowCount": 4 },
       { "name": "persons", "schema": "++id,name", "rowCount": 6 },
