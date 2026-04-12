@@ -186,18 +186,19 @@ function DraggableTodoCard({ todo, onOpen, redDays, yellowDays }: {
 }
 
 // ─── Spalte ───────────────────────────────────────────────────────────────────
-function KanbanColumn({ status, todos, onOpenTodo, redDays, yellowDays }: {
+function KanbanColumn({ status, todos, totalCount, isFiltered, onOpenTodo, redDays, yellowDays }: {
   status: KanbanStatus; todos: TodoWithProject[]; onOpenTodo: (id: number) => void;
-  redDays: number; yellowDays: number;
+  totalCount: number; isFiltered: boolean; redDays: number; yellowDays: number;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
   const isToday = status === 'today';
+  const countLabel = isFiltered ? `${todos.length}/${totalCount}` : `${totalCount}`;
   return (
     <div className="flex flex-col flex-1 min-w-0">
       <div className="flex items-center gap-2 mb-3">
         <span className={clsx('w-2 h-2 rounded-full flex-shrink-0', COLUMN_ACCENT[status])} />
         <h3 className="text-sm font-semibold text-gray-700 truncate">{COLUMN_LABELS[status]}</h3>
-        <span className="ml-auto text-xs text-gray-400 font-medium flex-shrink-0">{todos.length}</span>
+        <span className="ml-auto text-xs text-gray-400 font-medium flex-shrink-0">{countLabel}</span>
       </div>
       <div ref={setNodeRef}
         className={clsx('flex-1 flex flex-col gap-2 min-h-32 rounded-xl p-2 transition-colors',
@@ -217,6 +218,7 @@ export default function KanbanBoard() {
   const [filterProjectId, setFilterProjectId] = useState<number | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const { columns, handleDragEnd, projects } = useKanbanLogic(filterProjectId);
+  const isFilteredView = filterProjectId !== null;
   const settings = useSettings();
 
   const [activeId, setActiveId] = useState<number | null>(null);
@@ -225,7 +227,9 @@ export default function KanbanBoard() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
-  const activeTodo = activeId != null ? Object.values(columns).flat().find((t) => t.id === activeId) : null;
+  const activeTodo = activeId != null
+    ? Object.values(columns).flatMap((column) => column.visibleTodos).find((t) => t.id === activeId)
+    : null;
 
   // Beim ersten Laden: fällige Backlog-Todos → Heute einplanen + erledigte → Archiv
   useEffect(() => {
@@ -292,8 +296,9 @@ export default function KanbanBoard() {
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={onDragEnd}>
         <div className="flex gap-4 flex-1 min-h-0">
           {visibleColumns.map((status) => (
-            <KanbanColumn key={status} status={status} todos={columns[status]} onOpenTodo={(id) => setOpenTodoId(id)}
-              redDays={settings.deadlineRedDays} yellowDays={settings.deadlineYellowDays}
+            <KanbanColumn key={status} status={status} todos={columns[status].visibleTodos} totalCount={columns[status].totalCount}
+              isFiltered={isFilteredView} onOpenTodo={(id) => setOpenTodoId(id)} redDays={settings.deadlineRedDays}
+              yellowDays={settings.deadlineYellowDays}
             />
           ))}
         </div>
