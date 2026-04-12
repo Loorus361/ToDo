@@ -5,6 +5,7 @@ import { clsx } from 'clsx';
 import { useSettings } from '../hooks/useSettings';
 import { updateSettings } from '../data/settings';
 import HonorarSettingsSection from '../../honorar/components/HonorarSettingsSection';
+import { normalizeKampagnenModus, type KampagnenModus } from '../../ausbildung/data/kampagnenSettings';
 
 function NumberInput({
   label, description, value, min, max, onChange,
@@ -35,6 +36,7 @@ const TABS = [
 
 export default function SettingsView() {
   const settings = useSettings();
+  const kampagnenModus = normalizeKampagnenModus(settings.defaultKampagnenModus);
   const [redDays,    setRedDays]    = useState(settings.deadlineRedDays);
   const [yellowDays, setYellowDays] = useState(settings.deadlineYellowDays);
   const [saved, setSaved] = useState(false);
@@ -92,17 +94,17 @@ export default function SettingsView() {
                 Welche Kampagnen beim ersten Öffnen des Ausbildungsverlaufs angezeigt werden.
               </p>
               <div className="flex gap-2">
-                {(['aktuelle', 'alle_laufenden'] as const).map((modus) => (
+                {(['nutzerauswahl', 'alle_laufenden'] as const satisfies KampagnenModus[]).map((modus) => (
                   <button
                     key={modus}
                     onClick={() => updateSettings({ defaultKampagnenModus: modus })}
                     className={clsx('px-4 py-2 text-sm rounded-lg border font-medium transition-colors',
-                      (settings.defaultKampagnenModus ?? 'aktuelle') === modus
+                      kampagnenModus === modus
                         ? 'bg-primary-500 text-white border-primary-500'
                         : 'border-gray-200 text-gray-600 hover:border-gray-300'
                     )}
                   >
-                    {modus === 'aktuelle' ? 'Aktuelle Kampagne' : 'Alle laufenden'}
+                    {modus === 'nutzerauswahl' ? 'Nutzerauswahl' : 'Alle laufenden'}
                   </button>
                 ))}
               </div>
