@@ -24,7 +24,7 @@ export function getGespeicherteKampagnenauswahl(
 ): KampagnenAuswahlItem[] {
   const kampagnen = settings.kampagnenAuswahl?.filter(isKampagnenAuswahlItem) ?? [];
   if (kampagnen.length > 0) return kampagnen;
-  return getDefaultKampagnen('aktuelle');
+  return getDefaultKampagnen('aktuelle'); // 'aktuelle' = "nur aktuelle Kampagne" — der Parameterwert, nicht der Modus-Name
 }
 
 export function getAnzuzeigendeKampagnen(

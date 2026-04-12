@@ -92,7 +92,7 @@ export interface AppSettings {
   bgStyle?: string;               // 'light'|'warm'|'slate'
   defaultTodoStatus?: 'backlog' | 'doing';
   lastAutoArchivedDate?: string;  // 'YYYY-MM-DD' – verhindert mehrfaches Auto-Archivieren am selben Tag
-  defaultKampagnenModus?: 'aktuelle' | 'nutzerauswahl' | 'alle_laufenden';
+  defaultKampagnenModus?: 'aktuelle' | 'nutzerauswahl' | 'alle_laufenden'; // 'aktuelle' ist Legacy, wird beim Lesen zu 'nutzerauswahl' normalisiert
   kampagnenAuswahl?: KampagnenAuswahlItem[];
   honorarConfig?: HonorarConfig;
 }
