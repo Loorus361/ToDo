@@ -1,3 +1,4 @@
+// Feature-API für Projekte: CRUD inklusive Cascade-Delete von abhängigen Todos und Meilensteinen
 import {
   db,
   deleteProjectCascade,

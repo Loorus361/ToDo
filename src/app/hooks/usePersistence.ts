@@ -1,3 +1,4 @@
+// Hook für automatisches Backup-Intervall und Dirty-Tracking; einmalig in App.tsx einbinden
 import { useEffect, useRef } from 'react';
 import { registerDirtyCallback } from '../../shared/db/db';
 

@@ -1,3 +1,4 @@
+// Export- und Import-Logik für die gesamte Datenbank inklusive Schema-Validierung und Datenmigration
 import { exportDB, importInto } from 'dexie-export-import';
 import { db, DEFAULT_SETTINGS } from '../../shared/db/db';
 

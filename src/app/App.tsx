@@ -1,3 +1,4 @@
+// Root-Komponente: verbindet Persistenz, Backup-Modal, Sidebar und Routing
 import { useState } from 'react';
 import { usePersistence } from './hooks/usePersistence';
 import { exportDatabase } from './lib/dbBackup';

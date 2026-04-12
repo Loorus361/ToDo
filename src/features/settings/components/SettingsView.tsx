@@ -1,3 +1,4 @@
+// Einstellungsseite: Fristen-Schwellwerte, Honorar-Konfiguration und App-Informationen
 import { useState, useEffect } from 'react';
 import { Settings, Bell, Info, Star, GraduationCap, Calculator } from 'lucide-react';
 import { clsx } from 'clsx';

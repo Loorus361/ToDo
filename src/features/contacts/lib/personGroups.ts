@@ -1,3 +1,4 @@
+// Konstanten, Typen und Styling-Map für Personengruppen (ZR, SR, VR etc.)
 export const PERSON_GROUPS = ['ZR', 'ZRA', 'SR', 'SRA', 'VR', 'VRA', 'GJPA-Prüfer'] as const;
 export type PersonGroup = (typeof PERSON_GROUPS)[number];
 

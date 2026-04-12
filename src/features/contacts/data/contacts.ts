@@ -1,3 +1,4 @@
+// Feature-API für Kontakte (Persons): CRUD-Operationen auf der Dexie-Datenbank
 import { db, type Person } from '../../../shared/db/db';
 
 export type { Person } from '../../../shared/db/db';

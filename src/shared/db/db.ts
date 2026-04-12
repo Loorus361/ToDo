@@ -1,3 +1,4 @@
+// Dexie-Datenbankinstanz, Schema-Definitionen und Migrations-Logik für die gesamte App
 import Dexie, { type EntityTable } from 'dexie';
 
 // ─── Dirty-Tracking ───────────────────────────────────────────────────────────

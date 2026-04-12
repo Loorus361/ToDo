@@ -1,3 +1,4 @@
+// Standardwerte, Konfigurationstypen und Berechnungslogik für Honorarsätze
 import type { AppSettings, HonorarConfig, HonorarRates, BillingTypePreset } from '../../../shared/db/db';
 
 export const DEFAULT_HONORAR_RATES: HonorarRates = {
