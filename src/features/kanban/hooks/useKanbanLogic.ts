@@ -35,6 +35,7 @@ export function useKanbanLogic(filterProjectId: number | null) {
       return t.projectId === filterProjectId;
     });
 
+  // TODO: allColumns builds full arrays just to get .length — replace with a single reduce-based count map to avoid unnecessary allocations
   const allColumns: Record<KanbanStatus, TodoWithProject[]> = {
     today:    todosWithProject.filter((t) => t.status === 'today'),
     backlog:  todosWithProject.filter((t) => t.status === 'backlog'),
