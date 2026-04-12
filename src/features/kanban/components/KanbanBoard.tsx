@@ -1,3 +1,4 @@
+// Kanban-Board-Ansicht mit Drag-and-Drop zwischen Status-Spalten (today, backlog, doing, done)
 import {
   DndContext,
   DragOverlay,

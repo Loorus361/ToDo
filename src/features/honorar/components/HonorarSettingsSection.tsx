@@ -1,3 +1,4 @@
+// Einstellungsabschnitt für Honorarsätze und Abrechnungsvorlagen (eingebettet in SettingsView)
 import { useState, useEffect } from 'react';
 import { RotateCcw } from 'lucide-react';
 import { useSettings } from '../../settings/hooks/useSettings';

@@ -1,3 +1,4 @@
+// Feature-API für Projektvorlagen: CRUD und Anwenden einer Vorlage auf ein bestehendes Projekt
 import { db, type ProjectTemplate } from '../../../shared/db/db';
 
 export type { ProjectTemplate, TemplateTodoItem, TemplateMilestoneItem } from '../../../shared/db/db';

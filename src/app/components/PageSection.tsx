@@ -1,3 +1,4 @@
+// Einfacher Layout-Wrapper mit optionalem Titel für Seitenabschnitte
 import type { ReactNode } from 'react';
 
 interface PageSectionProps {

@@ -1,3 +1,4 @@
+// Vitest-Setup: IndexedDB-Polyfill und FileReader-Stub für Node.js-Testumgebung
 import 'fake-indexeddb/auto';
 
 // dexie-export-import referenziert `self` (Browser-Global)

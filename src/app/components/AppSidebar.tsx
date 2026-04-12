@@ -1,3 +1,4 @@
+// Seitennavigation mit Links zu allen Features sowie Backup- und Import-Aktionen
 import { Calculator, Circle, FolderOpen, GraduationCap, LayoutDashboard, Save, Settings, Upload, Users } from 'lucide-react';
 import { clsx } from 'clsx';
 import { NavLink } from 'react-router-dom';

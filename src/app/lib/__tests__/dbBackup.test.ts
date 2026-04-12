@@ -1,3 +1,4 @@
+// Tests für dbBackup: Versionserkennung, Datenmigration (Legacy → aktuell) und Import-Validierung
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { guessVersionFromData, getTableNames, migrateBackupData, importDatabase } from '../dbBackup';
 import { db } from '../../../shared/db/db';

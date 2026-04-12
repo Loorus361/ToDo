@@ -1,3 +1,4 @@
+// Listenansicht aller Projekte mit Erstellen, Bearbeiten, Farbauswahl und Vorlagen-Anwendung
 import { useState, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Plus, Trash2, ChevronRight, Calendar, Pencil } from 'lucide-react';

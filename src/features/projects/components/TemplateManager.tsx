@@ -1,3 +1,4 @@
+// Verwaltungsansicht für Projektvorlagen: Erstellen, Bearbeiten und Löschen von Vorlagen
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Plus, Trash2, ChevronDown, ChevronUp, Pencil, X } from 'lucide-react';

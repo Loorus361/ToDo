@@ -1,3 +1,4 @@
+// Feature-API für Todos: CRUD-Operationen und Kommunikations-Zugriffe auf die Dexie-Datenbank
 import { db, type Todo } from '../../../shared/db/db';
 
 export type { Todo } from '../../../shared/db/db';

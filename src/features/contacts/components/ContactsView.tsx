@@ -1,3 +1,4 @@
+// Kontaktverwaltung: Personenliste mit Detailansicht, Gruppen-Filter und Kommunikations-Log
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Plus, Trash2, ChevronDown, ChevronUp, Phone, Mail, StickyNote } from 'lucide-react';

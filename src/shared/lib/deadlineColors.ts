@@ -1,3 +1,4 @@
+// Hilfsfunktion zur Berechnung des Deadline-Status (none/yellow/red) anhand konfigurierbarer Schwellwerte
 export type DeadlineStatus = 'none' | 'yellow' | 'red';
 
 export function getDeadlineStatus(

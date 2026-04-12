@@ -1,3 +1,4 @@
+// Detail-Modal für ein Todo: Bearbeitungsformular, Kommunikations-Log und Verknüpfungen
 import { useState, useEffect, useCallback } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import {

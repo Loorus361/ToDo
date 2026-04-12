@@ -1,3 +1,4 @@
+// Feature-API für App-Einstellungen: Lesen und Schreiben der AppSettings in der Datenbank
 import { db, DEFAULT_SETTINGS, type AppSettings } from '../../../shared/db/db';
 import { saveSettings } from '../../../shared/db/db';
 

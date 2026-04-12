@@ -1,3 +1,4 @@
+// Farbpalette und Hilfsfunktionen für Projektfarben (ID-basiert, z. B. 'blue', 'green')
 export interface ProjectColor {
   id: string;
   label: string;

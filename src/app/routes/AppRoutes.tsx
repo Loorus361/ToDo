@@ -1,3 +1,4 @@
+// Zentrale Route-Definitionen aller Feature-Seiten der App
 import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import KanbanBoard from '../../features/kanban/components/KanbanBoard';
 import ProjectsView from '../../features/projects/components/ProjectsView';

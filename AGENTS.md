@@ -10,6 +10,12 @@ Dieses Projekt soll fuer iterative Entwicklung mit AI-Coding-Tools gut lesbar un
 - Nach groesseren Struktur- oder Routing-Aenderungen immer `npm run build` ausfuehren
 - Feature-Grenzen respektieren und keine neue globale Kopplung einfuehren
 
+## Datei-Header-Kommentare
+
+Jede `.ts`- und `.tsx`-Datei beginnt mit einem einzeiligen Kommentar, der prägnant erklärt, was die Datei tut.
+Beispiel: `// Dexie-Datenbankinstanz und Schema-Migrationen für die gesamte App`
+AI-Tools sollen diesen Kommentar beim Anlegen neuer Dateien automatisch setzen.
+
 ## Strukturregeln
 
 - `src/app` enthaelt nur App-Shell-Themen: Layout, Navigation, Routing, Persistenz, Backup

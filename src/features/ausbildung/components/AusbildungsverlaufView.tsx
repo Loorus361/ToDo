@@ -1,3 +1,4 @@
+// Zeitstrahl-Ansicht des Referendarausbildungsverlaufs mit Kampagnen und interaktivem Startdatum
 import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { Plus, X, GraduationCap } from 'lucide-react';
 import { clsx } from 'clsx';

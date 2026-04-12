@@ -1,3 +1,4 @@
+// Typen und Konstantendaten für Ausbildungsblöcke, Phasen und Zeitstrahl-Darstellung
 export interface StationBlock {
   label: string;
   phase: string;

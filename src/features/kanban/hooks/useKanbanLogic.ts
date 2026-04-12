@@ -1,3 +1,4 @@
+// Hook für Kanban-Board-Logik: reaktive Todo-Gruppen, Drag-and-Drop-Handler und Auto-Archivierung
 import { useLiveQuery } from 'dexie-react-hooks';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { listKanbanProjects, listKanbanTodos, moveTodoToStatus } from '../data/kanban';

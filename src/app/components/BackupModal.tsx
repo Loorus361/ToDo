@@ -1,3 +1,4 @@
+// Modal für manuellen Export und Import der IndexedDB-Datenbank; öffnet auch als Backup-Erinnerung
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { Download, Upload, X, ShieldCheck } from 'lucide-react';
 import { exportDatabase, importDatabase } from '../lib/dbBackup';

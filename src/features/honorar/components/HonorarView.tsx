@@ -1,3 +1,4 @@
+// Honorarkalkulator: Auswahl von Leistungen und Berechnung des Gesamthonorars nach Abrechnungstyp
 import { useState, useMemo } from 'react';
 import { Calculator } from 'lucide-react';
 import { clsx } from 'clsx';

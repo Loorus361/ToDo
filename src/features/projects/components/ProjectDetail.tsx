@@ -1,3 +1,4 @@
+// Detailansicht eines Projekts mit Todos, Meilensteinen, Kommunikation und Drag-and-Drop-Sortierung
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import {

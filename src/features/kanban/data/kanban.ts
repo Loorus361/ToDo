@@ -1,3 +1,4 @@
+// Feature-API für das Kanban-Board: Todo-Abfragen, Status-Updates und Auto-Archivierung
 import { autoArchiveDoneTodos, autoScheduleTodayTodos, db, type Todo } from '../../../shared/db/db';
 
 export function listKanbanTodos() {
