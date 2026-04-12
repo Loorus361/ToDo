@@ -9,6 +9,8 @@ dist/
 
 # Local tool settings
 .claude/settings.local.json
+.claude/worktrees/
+.codex/
 
 # Vite cache
 .vite/

@@ -1,0 +1,349 @@
+{
+  "formatName": "dexie",
+  "formatVersion": 1,
+  "_appSchemaVersion": 5,
+  "_exportedAt": "2026-04-10T07:30:00.000Z",
+  "data": {
+    "databaseName": "todo-manager-db",
+    "databaseVersion": 50,
+    "tables": [
+      { "name": "projects", "schema": "++id,title,deadline", "rowCount": 4 },
+      { "name": "persons", "schema": "++id,name", "rowCount": 6 },
+      { "name": "communications", "schema": "++id,type,medium,timestamp,content,personId,projectId,generatedTodoId", "rowCount": 7 },
+      { "name": "todos", "schema": "++id,title,status,deadline,projectId,commId,completedAt", "rowCount": 11 },
+      { "name": "settings", "schema": "++id", "rowCount": 1 },
+      { "name": "milestones", "schema": "++id,projectId", "rowCount": 6 },
+      { "name": "projectTemplates", "schema": "++id,name", "rowCount": 2 }
+    ],
+    "data": [
+      {
+        "tableName": "projects",
+        "inbound": true,
+        "rows": [
+          {
+            "id": 1,
+            "title": "Mandat Alpha",
+            "deadline": "2026-04-18",
+            "color": "blue"
+          },
+          {
+            "id": 2,
+            "title": "Referendar-Organisation 2026",
+            "deadline": "2026-05-02",
+            "color": "green"
+          },
+          {
+            "id": 3,
+            "title": "Ohne Frist / Nur Notizen",
+            "color": "amber"
+          },
+          {
+            "id": 4,
+            "title": "Langläufer ohne Farbe und ohne Deadline"
+          }
+        ]
+      },
+      {
+        "tableName": "persons",
+        "inbound": true,
+        "rows": [
+          {
+            "id": 1,
+            "name": "Anna Richter",
+            "phone": "+49 30 1234567",
+            "email": "anna.richter@example.org",
+            "notes": "Bevorzugt E-Mail, Rückruf meist erst ab 15 Uhr.",
+            "groups": ["ZR", "SR"]
+          },
+          {
+            "id": 2,
+            "name": "Bernd König",
+            "phone": "+49 171 555 0101"
+          },
+          {
+            "id": 3,
+            "name": "Claudia Weber",
+            "email": "claudia.weber@example.org",
+            "groups": ["VRA"]
+          },
+          {
+            "id": 4,
+            "name": "David Neumann",
+            "notes": "Nur lose Projektbeteiligung, keine Stammdaten gepflegt."
+          },
+          {
+            "id": 5,
+            "name": "Eva Zimmer",
+            "groups": []
+          },
+          {
+            "id": 6,
+            "name": "Fremdkontakt Altbestand"
+          }
+        ]
+      },
+      {
+        "tableName": "communications",
+        "inbound": true,
+        "rows": [
+          {
+            "id": 1,
+            "type": "In",
+            "medium": "Mail",
+            "timestamp": "2026-04-01T08:15:00.000Z",
+            "content": "Mandant fragt nach Zwischenstand und bittet um Rückmeldung bis Freitag.",
+            "personId": 1,
+            "projectId": 1,
+            "generatedTodoId": 2
+          },
+          {
+            "id": 2,
+            "type": "Out",
+            "medium": "Phone",
+            "timestamp": "2026-04-02T14:30:00.000Z",
+            "content": "Telefonische Abstimmung zur Fristverlängerung.",
+            "personId": 2,
+            "projectId": 1
+          },
+          {
+            "id": 3,
+            "type": "In",
+            "medium": "Mail",
+            "timestamp": "2026-03-28T11:05:00.000Z",
+            "content": "Unterlagen für Referendar-Organisation eingegangen.",
+            "personId": 3,
+            "projectId": 2
+          },
+          {
+            "id": 4,
+            "type": "Out",
+            "medium": "Mail",
+            "timestamp": "2026-03-29T09:00:00.000Z",
+            "content": "Vorlage für Ablaufplan versendet.",
+            "projectId": 2
+          },
+          {
+            "id": 5,
+            "type": "In",
+            "medium": "Phone",
+            "timestamp": "2026-02-15T16:20:00.000Z",
+            "content": "Rückfrage ohne Projektzuordnung aus Altbestand.",
+            "personId": 4
+          },
+          {
+            "id": 6,
+            "type": "Out",
+            "medium": "Mail",
+            "timestamp": "2026-01-12T07:45:00.000Z",
+            "content": "Archivierte Altkommunikation mit nachgelagertem Todo.",
+            "personId": 6,
+            "projectId": 4,
+            "generatedTodoId": 10
+          },
+          {
+            "id": 7,
+            "type": "In",
+            "medium": "Mail",
+            "timestamp": "2026-04-06T19:10:00.000Z",
+            "content": "Kurzer Ping ohne weitere Metadaten."
+          }
+        ]
+      },
+      {
+        "tableName": "todos",
+        "inbound": true,
+        "rows": [
+          {
+            "id": 1,
+            "title": "Unterlagen sichten",
+            "status": "today",
+            "description": "Eingegangene Unterlagen aus dem Projektordner prüfen und Kurznotiz anlegen.",
+            "deadline": "2026-04-11",
+            "prio": true,
+            "projectId": 1,
+            "lastAutoScheduledDate": "2026-04-11"
+          },
+          {
+            "id": 2,
+            "title": "Auf Mail von Anna Richter antworten",
+            "status": "backlog",
+            "deadline": "2026-04-12",
+            "projectId": 1,
+            "commId": 1
+          },
+          {
+            "id": 3,
+            "title": "Ablaufplan mit Claudia abstimmen",
+            "status": "doing",
+            "description": "Entwurf liegt vor, noch offene Rückfragen zur Terminlogik.",
+            "deadline": "2026-04-20",
+            "projectId": 2,
+            "commId": 3
+          },
+          {
+            "id": 4,
+            "title": "Altfall ohne Projektbezug",
+            "status": "backlog",
+            "description": "Soll bewusst ohne projectId importiert werden.",
+            "prio": true
+          },
+          {
+            "id": 5,
+            "title": "Bereits erledigtes To-Do mit completedAt",
+            "status": "done",
+            "deadline": "2026-04-05",
+            "projectId": 3,
+            "completedAt": "2026-04-05"
+          },
+          {
+            "id": 6,
+            "title": "Erledigt ohne completedAt",
+            "status": "done",
+            "projectId": 3
+          },
+          {
+            "id": 7,
+            "title": "Archivierter Altpunkt",
+            "status": "archived",
+            "projectId": 4,
+            "completedAt": "2026-02-20"
+          },
+          {
+            "id": 8,
+            "title": "Kommunikation nachfassen",
+            "status": "today",
+            "projectId": 2,
+            "commId": 4,
+            "deadline": "2026-04-11"
+          },
+          {
+            "id": 9,
+            "title": "Prio ohne Deadline",
+            "status": "backlog",
+            "projectId": 4,
+            "prio": true
+          },
+          {
+            "id": 10,
+            "title": "Archiv-Mail nachbereiten",
+            "status": "backlog",
+            "projectId": 4,
+            "commId": 6,
+            "deadline": "2026-04-30"
+          },
+          {
+            "id": 11,
+            "title": "Nur Kommunikationsbezug ohne Projekt",
+            "status": "doing",
+            "commId": 5
+          }
+        ]
+      },
+      {
+        "tableName": "settings",
+        "inbound": true,
+        "rows": [
+          {
+            "id": 1,
+            "deadlineRedDays": 1,
+            "deadlineYellowDays": 5,
+            "bgStyle": "light",
+            "defaultTodoStatus": "doing"
+          }
+        ]
+      },
+      {
+        "tableName": "milestones",
+        "inbound": true,
+        "rows": [
+          {
+            "id": 1,
+            "title": "Mandat eröffnet",
+            "done": true,
+            "projectId": 1,
+            "order": 1000
+          },
+          {
+            "id": 2,
+            "title": "Rückmeldung des Mandanten",
+            "done": false,
+            "notes": "Warten auf ergänzende Unterlagen.",
+            "projectId": 1,
+            "order": 2000
+          },
+          {
+            "id": 3,
+            "title": "Ablaufplan finalisieren",
+            "done": false,
+            "projectId": 2
+          },
+          {
+            "id": 4,
+            "title": "Vorlage archivieren",
+            "done": true,
+            "notes": "Historischer Meilenstein ohne weitere Bearbeitung.",
+            "projectId": 3,
+            "order": 3000
+          },
+          {
+            "id": 5,
+            "title": "Lose Notiz ohne Reihenfolge",
+            "done": false,
+            "projectId": 4
+          },
+          {
+            "id": 6,
+            "title": "Alt-Meilenstein mit leerer Notiz",
+            "done": false,
+            "notes": "",
+            "projectId": 2,
+            "order": 4000
+          }
+        ]
+      },
+      {
+        "tableName": "projectTemplates",
+        "inbound": true,
+        "rows": [
+          {
+            "id": 1,
+            "name": "Standard-Mandat",
+            "description": "Normale Vorlage mit To-Dos und Meilensteinen.",
+            "todos": [
+              {
+                "title": "Akte anlegen",
+                "status": "backlog",
+                "prio": true
+              },
+              {
+                "title": "Erstgespräch vorbereiten",
+                "status": "doing",
+                "description": "Offene Fragen vorab sammeln."
+              }
+            ],
+            "milestones": [
+              {
+                "title": "Erstkontakt"
+              },
+              {
+                "title": "Unterlagen vollständig",
+                "notes": "Checkliste einmal komplett prüfen."
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "name": "Schlanke Vorlage",
+            "todos": [
+              {
+                "title": "Kurz prüfen",
+                "status": "today"
+              }
+            ],
+            "milestones": []
+          }
+        ]
+      }
+    ]
+  }
+}

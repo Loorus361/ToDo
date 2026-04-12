@@ -10,6 +10,8 @@ import {
   getDefaultKampagnen,
   type StationBlock,
 } from '../lib/ausbildungsPhasen';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { getSettings } from '../../settings/data/settings';
 
 interface Kampagne {
   id: string;
@@ -19,6 +21,7 @@ interface Kampagne {
 }
 
 const STORAGE_KEY = 'ausbildung-kampagnen';
+const MODUS_STORAGE_KEY = 'ausbildung-kampagnen-modus';
 const LABEL_WIDTH = 120;
 const MONTH_NAMES = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
 const WIDTH_BY_SCALE = {
@@ -46,7 +49,7 @@ function sortKampagnenByStart(items: Kampagne[]): Kampagne[] {
   });
 }
 
-function loadKampagnen(): Kampagne[] {
+function loadKampagnen(modus: 'aktuelle' | 'alle_laufenden' = 'aktuelle'): Kampagne[] {
   try {
     const stored = sessionStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -55,8 +58,8 @@ function loadKampagnen(): Kampagne[] {
     }
   } catch { /* ignore */ }
 
-  // Fallback: Default-Kampagne erzeugen
-  const defaults = getDefaultKampagnen();
+  // Fallback: Default-Kampagnen anhand des Settings-Modus erzeugen
+  const defaults = getDefaultKampagnen(modus);
   return defaults.map((d, i) => ({ id: `k-${i}`, ...d }));
 }
 
@@ -68,15 +71,46 @@ function saveKampagnen(kampagnen: Kampagne[]): void {
 
 export default function AusbildungsverlaufView() {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [kampagnen, setKampagnen] = useState<Kampagne[]>(loadKampagnen);
+  // rawSettings === undefined solange IndexedDB noch lädt; danach echte Werte
+  const rawSettings = useLiveQuery(() => getSettings(), []);
+  const [kampagnen, setKampagnen] = useState<Kampagne[]>(() => {
+    try {
+      const storedModus = sessionStorage.getItem(MODUS_STORAGE_KEY) as 'aktuelle' | 'alle_laufenden' | null;
+      return loadKampagnen(storedModus ?? 'aktuelle');
+    } catch {
+      return loadKampagnen('aktuelle');
+    }
+  });
   const [addYear, setAddYear] = useState(new Date().getFullYear());
   const [addMonthIdx, setAddMonthIdx] = useState(0);
   const [scale, setScale] = useState<ScaleOption>('mittel');
   const [scrollLeft, setScrollLeft] = useState(0);
   const sortedKampagnen = useMemo(() => sortKampagnenByStart(kampagnen), [kampagnen]);
 
-  // Kampagnen in sessionStorage persistieren
+  // Modus aus Settings anwenden – läuft bei jedem rawSettings-Wechsel.
+  // Kampagnen werden nur zurückgesetzt, wenn noch keine User-Auswahl in der Session
+  // gespeichert ist (erstes Öffnen). Danach wird nur der gespeicherte Modus aktualisiert,
+  // damit spätere Sessions den neuen Modus als Default nutzen – ohne aktuelle Kampagnen zu überschreiben.
   useEffect(() => {
+    if (rawSettings === undefined) return;
+    const modus = rawSettings.defaultKampagnenModus ?? 'aktuelle';
+    try {
+      const storedModus = sessionStorage.getItem(MODUS_STORAGE_KEY);
+      if (storedModus !== modus) {
+        const hasStoredKampagnen = sessionStorage.getItem(STORAGE_KEY) !== null;
+        if (!hasStoredKampagnen) {
+          setKampagnen(getDefaultKampagnen(modus).map((d, i) => ({ id: `k-${i}`, ...d })));
+        }
+        sessionStorage.setItem(MODUS_STORAGE_KEY, modus);
+      }
+    } catch { /* ignore */ }
+  }, [rawSettings]);
+
+  // Kampagnen in sessionStorage persistieren (nur wenn Modus bereits gesetzt)
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem(MODUS_STORAGE_KEY) === null) return;
+    } catch { return; }
     saveKampagnen(kampagnen);
   }, [kampagnen]);
 
@@ -88,6 +122,14 @@ export default function AusbildungsverlaufView() {
     el.addEventListener('scroll', handler, { passive: true });
     return () => el.removeEventListener('scroll', handler);
   }, []);
+
+  // Zum aktuellen Datum scrollen wenn Kampagnen geladen oder geändert werden
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || currentQuarterOffset < 0 || currentQuarterOffset > totalQuarters) return;
+    const targetScroll = currentQuarterOffset * quarterColWidth - (el.clientWidth - LABEL_WIDTH) / 2;
+    el.scrollLeft = Math.max(0, targetScroll);
+  }, [sortedKampagnen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const addKampagne = useCallback(() => {
     const m = KAMPAGNE_MONATE[addMonthIdx];

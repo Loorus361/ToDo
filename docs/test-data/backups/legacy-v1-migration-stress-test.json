@@ -1,0 +1,180 @@
+{
+  "formatName": "dexie",
+  "formatVersion": 1,
+  "data": {
+    "databaseName": "todo-manager-db",
+    "databaseVersion": 10,
+    "tables": [
+      { "name": "projects", "schema": "++id,title,deadline", "rowCount": 3 },
+      { "name": "persons", "schema": "++id,name", "rowCount": 4 },
+      { "name": "communications", "schema": "++id,type,medium,timestamp,content,personId,projectId,generatedTodoId", "rowCount": 5 },
+      { "name": "todos", "schema": "++id,title,status,deadline,startDate,startAfterId,projectId,commId", "rowCount": 9 }
+    ],
+    "data": [
+      {
+        "tableName": "projects",
+        "inbound": true,
+        "rows": [
+          {
+            "id": 1,
+            "title": "Altprojekt mit Frist",
+            "deadline": "2025-12-31",
+            "color": "indigo"
+          },
+          {
+            "id": 2,
+            "title": "Altprojekt ohne Deadline"
+          },
+          {
+            "id": 3,
+            "title": "Projekt mit später verwaisten Referenzen",
+            "deadline": "2026-01-15"
+          }
+        ]
+      },
+      {
+        "tableName": "persons",
+        "inbound": true,
+        "rows": [
+          {
+            "id": 1,
+            "name": "Historische Kontaktperson",
+            "phone": "+49 40 111111",
+            "groups": ["ZR"]
+          },
+          {
+            "id": 2,
+            "name": "Nur E-Mail Altfall",
+            "email": "altfall@example.org"
+          },
+          {
+            "id": 3,
+            "name": "Kontakt mit Notiz",
+            "notes": "Aus altem Datenbestand übernommen."
+          },
+          {
+            "id": 4,
+            "name": "Fast leerer Kontakt"
+          }
+        ]
+      },
+      {
+        "tableName": "communications",
+        "inbound": true,
+        "rows": [
+          {
+            "id": 1,
+            "type": "In",
+            "medium": "Mail",
+            "timestamp": "2025-10-10T08:00:00.000Z",
+            "content": "Alte Eingangs-Mail mit Todo-Verknüpfung.",
+            "personId": 1,
+            "projectId": 1,
+            "generatedTodoId": 2
+          },
+          {
+            "id": 2,
+            "type": "Out",
+            "medium": "Phone",
+            "timestamp": "2025-10-11T09:30:00.000Z",
+            "content": "Telefonnotiz ohne Person, aber mit Projekt.",
+            "projectId": 2
+          },
+          {
+            "id": 3,
+            "type": "In",
+            "medium": "Mail",
+            "timestamp": "2025-10-12T12:15:00.000Z",
+            "content": "Verwaiste Kommunikation mit fehlender Person-Referenz.",
+            "personId": 999,
+            "projectId": 1
+          },
+          {
+            "id": 4,
+            "type": "Out",
+            "medium": "Mail",
+            "timestamp": "2025-10-13T16:45:00.000Z",
+            "content": "Verwaiste Kommunikation mit fehlender Projekt-Referenz.",
+            "personId": 2,
+            "projectId": 999
+          },
+          {
+            "id": 5,
+            "type": "In",
+            "medium": "Phone",
+            "timestamp": "2025-10-14T18:00:00.000Z",
+            "content": "Komplett loser Altfall ohne Referenzen."
+          }
+        ]
+      },
+      {
+        "tableName": "todos",
+        "inbound": true,
+        "rows": [
+          {
+            "id": 1,
+            "title": "Altstatus backlog-low mit Startdaten",
+            "status": "backlog-low",
+            "deadline": "2025-10-20",
+            "startDate": "2025-10-01",
+            "startAfterId": 7,
+            "projectId": 1
+          },
+          {
+            "id": 2,
+            "title": "Aus Kommunikation erzeugtes Alt-To-Do",
+            "status": "backlog-low",
+            "deadline": "2025-10-18",
+            "projectId": 1,
+            "commId": 1,
+            "prio": true
+          },
+          {
+            "id": 3,
+            "title": "Heute-Fall mit leerer Beschreibung",
+            "status": "today",
+            "description": "",
+            "projectId": 2
+          },
+          {
+            "id": 4,
+            "title": "Doing-Fall ohne Projekt",
+            "status": "doing",
+            "commId": 5
+          },
+          {
+            "id": 5,
+            "title": "Done-Fall aus alter Version ohne completedAt",
+            "status": "done",
+            "deadline": "2025-10-05",
+            "projectId": 2
+          },
+          {
+            "id": 6,
+            "title": "Archivierter Altfall",
+            "status": "archived",
+            "projectId": 3
+          },
+          {
+            "id": 7,
+            "title": "Backlog-low mit verwaister Projekt-Referenz",
+            "status": "backlog-low",
+            "projectId": 999
+          },
+          {
+            "id": 8,
+            "title": "Backlog mit verwaister Kommunikations-Referenz",
+            "status": "backlog",
+            "commId": 999,
+            "deadline": "2025-11-01"
+          },
+          {
+            "id": 9,
+            "title": "Minimales Alt-To-Do",
+            "status": "backlog-low"
+          }
+        ]
+      }
+    ]
+  }
+}
