@@ -67,3 +67,7 @@ Für jede Datei:
 - Danach: npm run test
 
 ------
+
+Codex Cloud Environment erstellen
+
+------
