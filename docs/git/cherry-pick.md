@@ -2,7 +2,7 @@
 
 ## Ziel
 
-Den Commit `4d458e37384f92159b36a8c94d1a42b30e6f0d70` auf `beta` uebernehmen.
+Den Commit `[commit hash]` auf `beta` uebernehmen.
 
 Der Commit aendert nur `AGENTS.md`.
 
@@ -50,7 +50,7 @@ git branch --set-upstream-to=origin/beta beta
 ### 2. Commit kurz ansehen
 
 ```bash
-git show 4d458e37384f92159b36a8c94d1a42b30e6f0d70 -- AGENTS.md
+git show [commit hash] -- AGENTS.md
 ```
 
 Erklärung:
@@ -67,7 +67,7 @@ git log --oneline -- AGENTS.md
 ### 3. Cherry-pick ausfuehren
 
 ```bash
-git cherry-pick 4d458e37384f92159b36a8c94d1a42b30e6f0d70
+git cherry-pick [commit hash]
 ```
 
 Erklärung:
@@ -118,7 +118,7 @@ Loesung:
 
 ```bash
 git stash push -u -m "before cherry-pick agents"
-git cherry-pick 4d458e37384f92159b36a8c94d1a42b30e6f0d70
+git cherry-pick [commit hash]
 git stash pop
 ```
 
@@ -234,7 +234,7 @@ Wenn alles sauber ist, reicht meistens:
 ```bash
 git switch beta
 git pull --ff-only origin beta
-git cherry-pick 4d458e37384f92159b36a8c94d1a42b30e6f0d70
+git cherry-pick [commit hash]
 git push origin beta
 ```
 
@@ -243,7 +243,7 @@ git push origin beta
 Starte mit:
 
 ```bash
-cd /Users/carlosanderssohn/Claude/Arbeit/ToDo-Manager
+cd /Users/redacted/Claude/Arbeit/ToDo-Manager
 git status -sb
 ```
 
