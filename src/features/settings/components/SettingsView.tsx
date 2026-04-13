@@ -188,7 +188,7 @@ export default function SettingsView() {
               <p className="text-xs text-gray-500 leading-relaxed">
                 Alle Daten (Projekte, To-Dos, Kommunikation, Kontakte, <strong>Einstellungen</strong>) werden
                 als JSON exportiert. Der <em>Speichern</em>-Button in der Sidebar löst den Download aus.
-                Ein Backup alle 30 Minuten wird automatisch empfohlen, wenn ungespeicherte Änderungen vorliegen.
+                Ein Backup alle 120 Minuten wird automatisch empfohlen, wenn ungespeicherte Änderungen vorliegen.
               </p>
             </div>
           </section>
