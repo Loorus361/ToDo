@@ -39,7 +39,6 @@ export default function SettingsView() {
   const kampagnenModus = normalizeKampagnenModus(settings.defaultKampagnenModus);
   const [redDays,    setRedDays]    = useState(settings.deadlineRedDays);
   const [yellowDays, setYellowDays] = useState(settings.deadlineYellowDays);
-  const [saved, setSaved] = useState(false);
   const [activeTab, setActiveTab] = useState<'general' | 'honorar'>('general');
 
   useEffect(() => {
@@ -47,10 +46,14 @@ export default function SettingsView() {
     setYellowDays(settings.deadlineYellowDays);
   }, [settings.deadlineRedDays, settings.deadlineYellowDays]);
 
-  async function handleSave() {
-    await updateSettings({ deadlineRedDays: redDays, deadlineYellowDays: yellowDays });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  function handleRedDaysChange(nextRedDays: number) {
+    setRedDays(nextRedDays);
+    void updateSettings({ deadlineRedDays: nextRedDays, deadlineYellowDays: yellowDays });
+  }
+
+  function handleYellowDaysChange(nextYellowDays: number) {
+    setYellowDays(nextYellowDays);
+    void updateSettings({ deadlineRedDays: redDays, deadlineYellowDays: nextYellowDays });
   }
 
   return (
@@ -151,12 +154,12 @@ export default function SettingsView() {
               <NumberInput
                 label="Rot ab … Tagen"
                 description="Deadlines die in ≤ N Tagen fällig sind (inkl. heute/überfällig = 0)"
-                value={redDays} min={0} max={yellowDays - 1} onChange={setRedDays}
+                value={redDays} min={0} max={yellowDays - 1} onChange={handleRedDaysChange}
               />
               <NumberInput
                 label="Gelb ab … Tagen"
                 description="Deadlines die in ≤ N Tagen fällig sind (muss größer als der Rot-Wert sein)"
-                value={yellowDays} min={redDays + 1} max={90} onChange={setYellowDays}
+                value={yellowDays} min={redDays + 1} max={90} onChange={handleYellowDaysChange}
               />
             </div>
             <div className="mt-3 flex gap-3 text-xs">
@@ -190,13 +193,6 @@ export default function SettingsView() {
             </div>
           </section>
 
-          {/* Speichern (nur für Fristenfarben nötig, Rest speichert sofort) */}
-          <button
-            onClick={handleSave}
-            className="px-5 py-2.5 bg-primary-500 text-white text-sm font-medium rounded-lg hover:bg-primary-600 transition-colors"
-          >
-            {saved ? '✓ Gespeichert' : 'Fristenfarben speichern'}
-          </button>
         </>
       )}
 
