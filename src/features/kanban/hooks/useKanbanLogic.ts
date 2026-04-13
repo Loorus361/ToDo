@@ -18,6 +18,50 @@ export interface KanbanColumnData {
 
 const DROPPABLE_STATUSES: KanbanStatus[] = ['today', 'backlog', 'doing', 'done', 'archived'];
 
+// Vergleichsfunktion für Array.sort(...):
+// - negativer Rückgabewert => a soll vor b stehen
+// - positiver Rückgabewert => b soll vor a stehen
+// - 0 => beide sind für dieses Kriterium gleich und das nächste Kriterium entscheidet
+function compareTodosByDeadline(a: TodoWithProject, b: TodoWithProject) {
+  // 1. Primärsortierung: Todos mit Deadline sollen grundsätzlich vor Todos ohne Deadline stehen.
+  // Wenn beide eine Deadline haben, entscheidet das frühere Datum.
+  if (a.deadline && b.deadline) {
+    // Die Deadlines liegen als ISO-Strings im Format YYYY-MM-DD vor.
+    // Dadurch kann man sie direkt lexikografisch vergleichen:
+    // "2026-04-10" kommt vor "2026-04-20".
+    const deadlineCompare = a.deadline.localeCompare(b.deadline);
+
+    // Ungleich bedeutet: die frühere Deadline kommt weiter nach oben im Board.
+    if (deadlineCompare !== 0) return deadlineCompare;
+  } else if (a.deadline) {
+    // Nur a hat eine Deadline -> a soll vor b stehen.
+    return -1;
+  } else if (b.deadline) {
+    // Nur b hat eine Deadline -> b soll vor a stehen.
+    return 1;
+  }
+
+  // 2. Wenn die Deadline gleich ist oder beide gar keine Deadline haben:
+  // priorisierte Todos (mit Stern) vor normalen Todos.
+  if (a.prio !== b.prio) {
+    // a.prio === true  -> a nach oben
+    // a.prio === false -> b nach oben
+    return a.prio ? -1 : 1;
+  }
+
+  // 3. Wenn auch die Priorität gleich ist:
+  // alphabetisch nach Titel sortieren, damit die Liste für Menschen lesbar bleibt.
+  const titleCompare = a.title.localeCompare(b.title, 'de-DE');
+
+  // Wenn die Titel unterschiedlich sind, entscheidet die alphabetische Reihenfolge.
+  if (titleCompare !== 0) return titleCompare;
+
+  // 4. Letzter Fallback:
+  // Wenn Deadline, Priorität und Titel identisch sind, nehmen wir die ID.
+  // So bleibt die Reihenfolge stabil und eindeutig.
+  return (a.id ?? 0) - (b.id ?? 0);
+}
+
 export function useKanbanLogic(filterProjectId: number | null) {
   const todos = useLiveQuery(() => listKanbanTodos(), []);
   const projects = useLiveQuery(() => listKanbanProjects(), []);
@@ -51,6 +95,13 @@ export function useKanbanLogic(filterProjectId: number | null) {
     done:     filtered.filter((t) => t.status === 'done'),
     archived: filtered.filter((t) => t.status === 'archived'),
   };
+
+  // Die feste Board-Sortierung wird zentral hier angewendet.
+  // Vorteil: Jede Spalte benutzt automatisch dieselbe Logik,
+  // ohne dass im UI pro Spalte separat sortiert werden muss.
+  for (const status of DROPPABLE_STATUSES) {
+    filteredColumns[status].sort(compareTodosByDeadline);
+  }
 
   const columns: Record<KanbanStatus, KanbanColumnData> = {
     today: { visibleTodos: filteredColumns.today, totalCount: allColumns.today.length },
