@@ -15,7 +15,13 @@ export default function App() {
   usePersistence({ isDirty, setIsDirty, setShowBackupModal });
 
   async function handleManualExport() {
-    const { exportDatabase } = await import('./lib/dbBackup');
+    let exportDatabase: () => Promise<boolean>;
+    try {
+      ({ exportDatabase } = await import('./lib/dbBackup'));
+    } catch {
+      window.location.reload();
+      return;
+    }
     const ok = await exportDatabase();
     if (ok) setIsDirty(false);
   }
