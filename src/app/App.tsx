@@ -1,6 +1,7 @@
 // Root-Komponente: verbindet Persistenz, Backup-Modal, Sidebar und Routing
 import { lazy, Suspense, useState } from 'react';
 import { usePersistence } from './hooks/usePersistence';
+import { ChunkErrorBoundary } from './components/ChunkErrorBoundary';
 import { AppSidebar } from './components/AppSidebar';
 import { AppRoutes } from './routes/AppRoutes';
 
@@ -34,13 +35,22 @@ export default function App() {
       </main>
 
       {showBackupModal && (
-        <Suspense fallback={<div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50" />}>
-          <BackupModal
-            isReminder={isDirty}
-            onResetDirty={() => setIsDirty(false)}
-            onClose={() => setShowBackupModal(false)}
-          />
-        </Suspense>
+        <ChunkErrorBoundary>
+          <Suspense fallback={(
+            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
+              <div className="bg-white rounded-xl px-6 py-4 flex items-center gap-3 shadow-xl">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+                <span className="text-sm text-gray-600">Wird geladen…</span>
+              </div>
+            </div>
+          )}>
+            <BackupModal
+              isReminder={isDirty}
+              onResetDirty={() => setIsDirty(false)}
+              onClose={() => setShowBackupModal(false)}
+            />
+          </Suspense>
+        </ChunkErrorBoundary>
       )}
     </div>
   );
