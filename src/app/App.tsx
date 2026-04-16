@@ -1,10 +1,12 @@
 // Root-Komponente: verbindet Persistenz, Backup-Modal, Sidebar und Routing
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { usePersistence } from './hooks/usePersistence';
-import { exportDatabase } from './lib/dbBackup';
-import { BackupModal } from './components/BackupModal';
 import { AppSidebar } from './components/AppSidebar';
 import { AppRoutes } from './routes/AppRoutes';
+
+const BackupModal = lazy(() =>
+  import('./components/BackupModal').then((module) => ({ default: module.BackupModal }))
+);
 
 export default function App() {
   const [isDirty, setIsDirty] = useState(false);
@@ -12,6 +14,7 @@ export default function App() {
   usePersistence({ isDirty, setIsDirty, setShowBackupModal });
 
   async function handleManualExport() {
+    const { exportDatabase } = await import('./lib/dbBackup');
     const ok = await exportDatabase();
     if (ok) setIsDirty(false);
   }
@@ -31,11 +34,13 @@ export default function App() {
       </main>
 
       {showBackupModal && (
-        <BackupModal
-          isReminder={isDirty}
-          onResetDirty={() => setIsDirty(false)}
-          onClose={() => setShowBackupModal(false)}
-        />
+        <Suspense fallback={<div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50" />}>
+          <BackupModal
+            isReminder={isDirty}
+            onResetDirty={() => setIsDirty(false)}
+            onClose={() => setShowBackupModal(false)}
+          />
+        </Suspense>
       )}
     </div>
   );
