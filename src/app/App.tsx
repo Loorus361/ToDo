@@ -1,5 +1,6 @@
 // Root-Komponente: verbindet Persistenz, Backup-Modal, Sidebar und Routing
 import { useState } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { usePersistence } from './hooks/usePersistence';
 import { exportDatabase } from './lib/dbBackup';
 import { BackupModal } from './components/BackupModal';
@@ -37,6 +38,8 @@ export default function App() {
           onClose={() => setShowBackupModal(false)}
         />
       )}
+
+      <Analytics />
     </div>
   );
 }
