@@ -1,10 +1,12 @@
 name: Deploy to GitHub Pages
 
+# Deployment vereinfacht auf main-only (2026-04).
+# Zwischenschritt vor Migration zu Vercel.
+
 on:
   push:
     branches:
       - main
-      - beta
   workflow_dispatch:
 
 permissions:
@@ -17,9 +19,6 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      IS_BETA: ${{ github.ref_name == 'beta' }}
-      BASE_PATH: ${{ github.ref_name == 'beta' && '/ToDo/beta/' || '/ToDo/' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -39,18 +38,8 @@ jobs:
       - name: Add .nojekyll
         run: touch dist/.nojekyll
 
-      - name: Deploy production site
-        if: env.IS_BETA != 'true'
+      - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
           folder: dist
-          clean-exclude: beta
-
-      - name: Deploy beta preview
-        if: env.IS_BETA == 'true'
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          branch: gh-pages
-          folder: dist
-          target-folder: beta

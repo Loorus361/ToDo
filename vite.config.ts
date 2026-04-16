@@ -3,8 +3,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
-const basePath = process.env.BASE_PATH ?? '/ToDo/';
-const isMainPagesBuild = basePath === '/ToDo/';
+const basePath = '/ToDo/';
 
 export default defineConfig({
   base: basePath,
@@ -27,7 +26,6 @@ export default defineConfig({
       strategies: 'generateSW',
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        navigateFallbackDenylist: isMainPagesBuild ? [/^\/ToDo\/beta\//] : undefined,
         // IndexedDB-Daten nicht cachen — Local-First, keine Netzwerk-Anfragen
         runtimeCaching: [],
       },
