@@ -1,6 +1,7 @@
 // Root-Komponente: verbindet Persistenz, Backup-Modal, Sidebar und Routing
 import { lazy, Suspense, useState } from 'react';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { usePersistence } from './hooks/usePersistence';
 import { ChunkErrorBoundary } from './components/ChunkErrorBoundary';
 import { AppSidebar } from './components/AppSidebar';
@@ -59,8 +60,8 @@ export default function App() {
           </Suspense>
         </ChunkErrorBoundary>
       )}
-
       <Analytics />
+      <SpeedInsights />
     </div>
   );
 }
