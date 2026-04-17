@@ -1,11 +1,14 @@
 // Root-Komponente: verbindet Persistenz, Backup-Modal, Sidebar und Routing
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Analytics } from '@vercel/analytics/react';
 import { usePersistence } from './hooks/usePersistence';
-import { exportDatabase } from './lib/dbBackup';
-import { BackupModal } from './components/BackupModal';
+import { ChunkErrorBoundary } from './components/ChunkErrorBoundary';
 import { AppSidebar } from './components/AppSidebar';
 import { AppRoutes } from './routes/AppRoutes';
+
+const BackupModal = lazy(() =>
+  import('./components/BackupModal').then((module) => ({ default: module.BackupModal }))
+);
 
 export default function App() {
   const [isDirty, setIsDirty] = useState(false);
@@ -13,6 +16,13 @@ export default function App() {
   usePersistence({ isDirty, setIsDirty, setShowBackupModal });
 
   async function handleManualExport() {
+    let exportDatabase: () => Promise<boolean>;
+    try {
+      ({ exportDatabase } = await import('./lib/dbBackup'));
+    } catch {
+      window.location.reload();
+      return;
+    }
     const ok = await exportDatabase();
     if (ok) setIsDirty(false);
   }
@@ -32,11 +42,22 @@ export default function App() {
       </main>
 
       {showBackupModal && (
-        <BackupModal
-          isReminder={isDirty}
-          onResetDirty={() => setIsDirty(false)}
-          onClose={() => setShowBackupModal(false)}
-        />
+        <ChunkErrorBoundary>
+          <Suspense fallback={(
+            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
+              <div className="bg-white rounded-xl px-6 py-4 flex items-center gap-3 shadow-xl">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+                <span className="text-sm text-gray-600">Wird geladen…</span>
+              </div>
+            </div>
+          )}>
+            <BackupModal
+              isReminder={isDirty}
+              onResetDirty={() => setIsDirty(false)}
+              onClose={() => setShowBackupModal(false)}
+            />
+          </Suspense>
+        </ChunkErrorBoundary>
       )}
 
       <Analytics />

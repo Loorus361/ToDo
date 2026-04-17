@@ -1,13 +1,34 @@
 // Zentrale Route-Definitionen aller Feature-Seiten der App
+import { lazy, Suspense, type ReactNode } from 'react';
 import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import KanbanBoard from '../../features/kanban/components/KanbanBoard';
-import ProjectsView from '../../features/projects/components/ProjectsView';
-import ProjectDetail from '../../features/projects/components/ProjectDetail';
-import ContactsView from '../../features/contacts/components/ContactsView';
-import SettingsView from '../../features/settings/components/SettingsView';
-import AusbildungsverlaufView from '../../features/ausbildung/components/AusbildungsverlaufView';
-import HonorarView from '../../features/honorar/components/HonorarView';
+import { ChunkErrorBoundary } from '../components/ChunkErrorBoundary';
 import { PageSection } from '../components/PageSection';
+
+const ProjectsView = lazy(() => import(/* @vite-prefetch */ '../../features/projects/components/ProjectsView'));
+const ProjectDetail = lazy(() => import(/* @vite-prefetch */ '../../features/projects/components/ProjectDetail'));
+const ContactsView = lazy(() => import(/* @vite-prefetch */ '../../features/contacts/components/ContactsView'));
+const SettingsView = lazy(() => import('../../features/settings/components/SettingsView'));
+const AusbildungsverlaufView = lazy(() => import('../../features/ausbildung/components/AusbildungsverlaufView'));
+const HonorarView = lazy(() => import('../../features/honorar/components/HonorarView'));
+
+function RouteLoadingState() {
+  return (
+    <div className="flex min-h-[12rem] items-center justify-center text-sm text-gray-500">
+      Seite wird geladen...
+    </div>
+  );
+}
+
+function withRouteSuspense(element: ReactNode) {
+  return (
+    <ChunkErrorBoundary>
+      <Suspense fallback={<RouteLoadingState />}>
+        {element}
+      </Suspense>
+    </ChunkErrorBoundary>
+  );
+}
 
 function ProjectDetailRoute() {
   const navigate = useNavigate();
@@ -41,13 +62,15 @@ export function AppRoutes() {
       />
       <Route
         path="/projects"
-        element={<ProjectsView onSelectProject={(projectId) => navigate(`/projects/${projectId}`)} />}
+        element={withRouteSuspense(
+          <ProjectsView onSelectProject={(projectId) => navigate(`/projects/${projectId}`)} />
+        )}
       />
-      <Route path="/projects/:projectId" element={<ProjectDetailRoute />} />
-      <Route path="/contacts" element={<ContactsView />} />
+      <Route path="/projects/:projectId" element={withRouteSuspense(<ProjectDetailRoute />)} />
+      <Route path="/contacts" element={withRouteSuspense(<ContactsView />)} />
       <Route
         path="/ausbildung"
-        element={(
+        element={withRouteSuspense(
           <PageSection fullHeight>
             <AusbildungsverlaufView />
           </PageSection>
@@ -55,13 +78,13 @@ export function AppRoutes() {
       />
       <Route
         path="/honorar"
-        element={(
+        element={withRouteSuspense(
           <PageSection fullHeight>
             <HonorarView />
           </PageSection>
         )}
       />
-      <Route path="/settings" element={<SettingsView />} />
+      <Route path="/settings" element={withRouteSuspense(<SettingsView />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
