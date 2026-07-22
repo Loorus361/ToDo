@@ -16,7 +16,7 @@ function isKampagnenAuswahlItem(value: unknown): value is KampagnenAuswahlItem {
 }
 
 export function normalizeKampagnenModus(modus?: LegacyKampagnenModus): KampagnenModus {
-  return modus === 'alle_laufenden' ? 'alle_laufenden' : 'nutzerauswahl';
+  return modus === 'nutzerauswahl' || modus === 'aktuelle' ? 'nutzerauswahl' : 'alle_laufenden';
 }
 
 export function getGespeicherteKampagnenauswahl(
@@ -39,4 +39,8 @@ export function getAnzuzeigendeKampagnen(
 
 export function saveKampagnenauswahl(kampagnen: KampagnenAuswahlItem[]) {
   return updateSettings({ kampagnenAuswahl: kampagnen });
+}
+
+export function saveKampagnenModus(modus: KampagnenModus) {
+  return updateSettings({ defaultKampagnenModus: modus });
 }

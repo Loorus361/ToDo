@@ -16,6 +16,14 @@ describe('kampagnenSettings', () => {
     expect(normalizeKampagnenModus('alle_laufenden')).toBe('alle_laufenden');
   });
 
+  it('zeigt ohne gespeicherten Modus standardmäßig alle laufenden Kampagnen an', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-12T10:00:00Z'));
+
+    expect(normalizeKampagnenModus()).toBe('alle_laufenden');
+    expect(getAnzuzeigendeKampagnen({})).toHaveLength(8);
+  });
+
   it('liefert die gespeicherte Nutzerauswahl unverändert zurück', () => {
     const kampagnen = [
       { label: 'Mai 2025', t0Year: 2025, t0Month: 4 },

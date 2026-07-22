@@ -1,16 +1,9 @@
-// Zentrale Route-Definitionen aller Feature-Seiten der App
-import { lazy, Suspense, type ReactNode } from 'react';
-import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
-import KanbanBoard from '../../features/kanban/components/KanbanBoard';
+// Routing der auf den Ausbildungsverlauf reduzierten App
+import { lazy, Suspense } from 'react';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { ChunkErrorBoundary } from '../components/ChunkErrorBoundary';
-import { PageSection } from '../components/PageSection';
 
-const ProjectsView = lazy(() => import(/* @vite-prefetch */ '../../features/projects/components/ProjectsView'));
-const ProjectDetail = lazy(() => import(/* @vite-prefetch */ '../../features/projects/components/ProjectDetail'));
-const ContactsView = lazy(() => import(/* @vite-prefetch */ '../../features/contacts/components/ContactsView'));
-const SettingsView = lazy(() => import('../../features/settings/components/SettingsView'));
 const AusbildungsverlaufView = lazy(() => import('../../features/ausbildung/components/AusbildungsverlaufView'));
-const HonorarView = lazy(() => import('../../features/honorar/components/HonorarView'));
 
 function RouteLoadingState() {
   return (
@@ -20,71 +13,21 @@ function RouteLoadingState() {
   );
 }
 
-function withRouteSuspense(element: ReactNode) {
+function AusbildungsverlaufRoute() {
   return (
     <ChunkErrorBoundary>
       <Suspense fallback={<RouteLoadingState />}>
-        {element}
+        <AusbildungsverlaufView />
       </Suspense>
     </ChunkErrorBoundary>
   );
 }
 
-function ProjectDetailRoute() {
-  const navigate = useNavigate();
-  const { projectId } = useParams();
-  const parsedProjectId = Number(projectId);
-
-  if (!projectId || Number.isNaN(parsedProjectId)) {
-    return <Navigate to="/projects" replace />;
-  }
-
-  return (
-    <ProjectDetail
-      projectId={parsedProjectId}
-      onBack={() => navigate('/projects')}
-    />
-  );
-}
-
 export function AppRoutes() {
-  const navigate = useNavigate();
-
   return (
     <Routes>
-      <Route
-        path="/"
-        element={(
-          <PageSection title="Dashboard" fullHeight>
-            <KanbanBoard />
-          </PageSection>
-        )}
-      />
-      <Route
-        path="/projects"
-        element={withRouteSuspense(
-          <ProjectsView onSelectProject={(projectId) => navigate(`/projects/${projectId}`)} />
-        )}
-      />
-      <Route path="/projects/:projectId" element={withRouteSuspense(<ProjectDetailRoute />)} />
-      <Route path="/contacts" element={withRouteSuspense(<ContactsView />)} />
-      <Route
-        path="/ausbildung"
-        element={withRouteSuspense(
-          <PageSection fullHeight>
-            <AusbildungsverlaufView />
-          </PageSection>
-        )}
-      />
-      <Route
-        path="/honorar"
-        element={withRouteSuspense(
-          <PageSection fullHeight>
-            <HonorarView />
-          </PageSection>
-        )}
-      />
-      <Route path="/settings" element={withRouteSuspense(<SettingsView />)} />
+      <Route path="/" element={<AusbildungsverlaufRoute />} />
+      <Route path="/ausbildung" element={<Navigate to="/" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

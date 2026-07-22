@@ -15,7 +15,9 @@ import {
   getAnzuzeigendeKampagnen,
   getGespeicherteKampagnenauswahl,
   normalizeKampagnenModus,
+  saveKampagnenModus,
   saveKampagnenauswahl,
+  type KampagnenModus,
   type KampagnenAuswahlItem,
 } from '../data/kampagnenSettings';
 
@@ -122,6 +124,10 @@ export default function AusbildungsverlaufView() {
     await saveKampagnenauswahl(sortGespeicherteAuswahl(next));
   }, [gespeicherteKampagnen, istNutzerauswahl]);
 
+  const changeKampagnenModus = useCallback(async (modus: KampagnenModus) => {
+    await saveKampagnenModus(modus);
+  }, []);
+
   // Berechne den globalen Zeitraum (frühester Start bis spätestes Ende)
   const { globalStartQuarter, totalQuarters, months } = useMemo(() => {
     if (sortedKampagnen.length === 0) return { globalStartQuarter: 0, totalQuarters: 0, months: [] };
@@ -165,64 +171,65 @@ export default function AusbildungsverlaufView() {
   const showCurrentMarker = currentQuarterOffset >= 0 && currentQuarterOffset <= totalQuarters;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full min-h-0 flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="flex items-center gap-3">
-          <GraduationCap size={24} className="text-primary-600" />
-          <h2 className="text-xl font-semibold text-gray-900">Ausbildungsverlauf</h2>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50">
+            <GraduationCap size={22} className="text-primary-600" />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight text-gray-900">Ausbildungsverlauf</h1>
+            <p className="text-sm text-gray-500">Stationen und Arbeitsgemeinschaften im zeitlichen Überblick</p>
+          </div>
         </div>
 
-        {/* Kampagne hinzufügen */}
-        <div className="flex items-center gap-3">
-          <div className="text-right">
-            <div className="text-xs font-medium text-gray-500">
-              {istNutzerauswahl ? 'Modus: Nutzerauswahl' : 'Modus: Alle laufenden'}
-            </div>
-            <div className="text-xs text-gray-400">
-              {istNutzerauswahl
-                ? 'Diese Auswahl wird dauerhaft gespeichert.'
-                : 'Zum Bearbeiten der Auswahl in den Einstellungen auf Nutzerauswahl wechseln.'}
-            </div>
+        <div className="flex flex-col gap-2 sm:items-end">
+          <div className="flex flex-wrap items-center gap-2">
+            <label htmlFor="campaign-mode" className="text-xs font-medium text-gray-500">Ansicht</label>
+            <select
+              id="campaign-mode"
+              value={kampagnenModus}
+              onChange={(event) => changeKampagnenModus(event.target.value as KampagnenModus)}
+              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
+            >
+              <option value="alle_laufenden">Aktive Kampagnen</option>
+              <option value="nutzerauswahl">Eigene Auswahl</option>
+            </select>
           </div>
-          <select
-            value={addMonthIdx}
-            onChange={e => setAddMonthIdx(Number(e.target.value))}
-            disabled={!istNutzerauswahl}
-            className={clsx(
-              'text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white',
-              !istNutzerauswahl && 'opacity-60 cursor-not-allowed',
-            )}
-          >
-            {KAMPAGNE_LABELS.map((l, i) => (
-              <option key={l} value={i}>{l}</option>
-            ))}
-          </select>
-          <input
-            type="number"
-            value={addYear}
-            onChange={e => setAddYear(Number(e.target.value))}
-            disabled={!istNutzerauswahl}
-            className={clsx(
-              'text-sm border border-gray-200 rounded-md px-2 py-1.5 w-20 bg-white',
-              !istNutzerauswahl && 'opacity-60 cursor-not-allowed',
-            )}
-            min={2020}
-            max={2035}
-          />
-          <button
-            onClick={addKampagne}
-            disabled={!istNutzerauswahl}
-            className={clsx(
-              'flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
-              istNutzerauswahl
-                ? 'text-primary-600 bg-primary-50 hover:bg-primary-100'
-                : 'text-gray-400 bg-gray-100 cursor-not-allowed',
-            )}
-          >
-            <Plus size={14} />
-            Kampagne
-          </button>
+
+          {istNutzerauswahl ? (
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-100 bg-white p-2 shadow-sm">
+              <select
+                aria-label="Startmonat der Kampagne"
+                value={addMonthIdx}
+                onChange={event => setAddMonthIdx(Number(event.target.value))}
+                className="rounded-md border border-gray-200 bg-white px-2 py-1.5 text-sm"
+              >
+                {KAMPAGNE_LABELS.map((label, index) => (
+                  <option key={label} value={index}>{label}</option>
+                ))}
+              </select>
+              <input
+                aria-label="Startjahr der Kampagne"
+                type="number"
+                value={addYear}
+                onChange={event => setAddYear(Number(event.target.value))}
+                className="w-24 rounded-md border border-gray-200 bg-white px-2 py-1.5 text-sm"
+                min={2020}
+                max={2035}
+              />
+              <button
+                onClick={addKampagne}
+                className="flex items-center gap-1 rounded-md bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-600 transition-colors hover:bg-primary-100 focus:outline-none focus:ring-2 focus:ring-primary-200"
+              >
+                <Plus size={14} />
+                Hinzufügen
+              </button>
+            </div>
+          ) : (
+            <p className="text-xs text-gray-400">Alle derzeit laufenden Kampagnen werden automatisch angezeigt.</p>
+          )}
         </div>
       </div>
 
@@ -260,7 +267,7 @@ export default function AusbildungsverlaufView() {
       {/* Timeline */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-auto border border-gray-200 rounded-lg bg-white"
+        className="min-h-0 flex-1 overflow-auto rounded-xl border border-gray-200 bg-white shadow-sm"
       >
         {sortedKampagnen.length === 0 ? (
           <div className="flex items-center justify-center py-16 text-gray-400 text-sm">
