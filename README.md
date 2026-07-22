@@ -1,6 +1,6 @@
 # Ausbildungsverlauf
 
-Schlanke React-/Vite-PWA für den Ausbildungsverlauf laufender Referendariatskampagnen.
+Schlanke React-/Vinext-App für den Ausbildungsverlauf laufender Referendariatskampagnen.
 
 ## Entwicklung
 
@@ -15,7 +15,7 @@ Build pruefen:
 npm run build
 ```
 
-Die App läuft standardmäßig am Basispfad `/` und ist für die Veröffentlichung über OpenAI Sites vorbereitet.
+Die App läuft am Basispfad `/` und wird im nativen Cloudflare-Worker-Format von OpenAI Sites gebaut.
 
 ## Contributing
 

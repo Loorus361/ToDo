@@ -3,6 +3,9 @@ node_modules/
 
 # Build output
 dist/
+.next/
+.vinext/
+.wrangler/
 
 # Local OS / editor files
 **/.DS_Store
