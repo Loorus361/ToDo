@@ -6,6 +6,7 @@ export interface StationBlock {
   endQuarter: number;
   type: 'abschnitt' | 'station' | 'ag' | 'klku' | 'pruefung';
   layer: number; // 0 = Hauptlayer, 1+ = überlagernde Layer
+  examCampaignOffsetMonths?: number; // Startversatz der Kampagne, mit der eine Wiederholungsprüfung stattfindet
 }
 
 // Farben pro Phase
@@ -15,6 +16,7 @@ export const PHASE_COLORS: Record<string, { bg: string; border: string; text: st
   verwaltung:      { bg: '#dbeafe', border: '#2563eb', text: '#1d4ed8' },
   anwalt:          { bg: '#ffedd5', border: '#ea580c', text: '#9a3412' },
   wahlstation:     { bg: '#f3e8ff', border: '#9333ea', text: '#6b21a8' },
+  ezsv:            { bg: '#ccfbf1', border: '#0f766e', text: '#115e59' },
   pruefung:        { bg: '#fef9c3', border: '#ca8a04', text: '#854d0e' },
   ag:              { bg: '#e0e7ff', border: '#6366f1', text: '#3730a3' },
 };
@@ -67,11 +69,51 @@ export const AUSBILDUNGS_BLOECKE: StationBlock[] = [
 
 export const KAMPAGNE_MONATE = [1, 4, 7, 10] as const; // Feb=1(0-idx), Mai=4, Aug=7, Nov=10
 export const KAMPAGNE_LABELS = ['Februar', 'Mai', 'August', 'November'] as const;
+const MONATSNAMEN = [
+  'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+  'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember',
+] as const;
 
 export const TOTAL_QUARTERS = 100; // 25 Monate × 4
+export const EZSV_TOTAL_QUARTERS = 124; // 31 Monate × 4 einschließlich Wiederholungsprüfungen
+
+export const EZSV_AUSBILDUNGS_BLOECKE: StationBlock[] = [
+  ...AUSBILDUNGS_BLOECKE.filter((block) => block.label !== 'Mündl. Examen'),
+  { label: 'EZSV', phase: 'ezsv', startQuarter: 96, endQuarter: 112, type: 'station', layer: 0 },
+  {
+    label: 'Wdh. schriftl. Examen',
+    phase: 'pruefung',
+    startQuarter: 112,
+    endQuarter: 114,
+    type: 'pruefung',
+    layer: 1,
+    examCampaignOffsetMonths: 9,
+  },
+  {
+    label: 'Mündl. Examen',
+    phase: 'pruefung',
+    startQuarter: 120,
+    endQuarter: 124,
+    type: 'pruefung',
+    layer: 1,
+    examCampaignOffsetMonths: 6,
+  },
+];
+
+export function getKampagnenLabelAtOffset(
+  t0Year: number,
+  t0Month: number,
+  offsetMonths: number,
+): string {
+  const date = new Date(t0Year, t0Month + offsetMonths, 1);
+  const campaignIndex = KAMPAGNE_MONATE.findIndex((month) => month === date.getMonth());
+  const monthLabel = campaignIndex >= 0 ? KAMPAGNE_LABELS[campaignIndex] : MONATSNAMEN[date.getMonth()];
+  return `${monthLabel} ${date.getFullYear()}`;
+}
 
 export function getDefaultKampagnen(
   modus: 'aktuelle' | 'alle_laufenden' = 'aktuelle',
+  laufzeitMonate = TOTAL_QUARTERS / 4,
 ): { label: string; t0Year: number; t0Month: number }[] {
   const now = new Date();
   const nowAbsMonth = now.getFullYear() * 12 + now.getMonth();
@@ -91,9 +133,9 @@ export function getDefaultKampagnen(
   candidates.sort((a, b) => a.absMonth - b.absMonth);
 
   if (modus === 'alle_laufenden') {
-    // Laufend = gestartet (absMonth <= heute) und noch nicht abgeschlossen (absMonth + 25 > heute)
+    // Laufend = gestartet und innerhalb der für die gewählte Ansicht geltenden Gesamtdauer
     const active = candidates.filter(
-      c => c.absMonth <= nowAbsMonth && c.absMonth + 25 > nowAbsMonth,
+      c => c.absMonth <= nowAbsMonth && c.absMonth + laufzeitMonate > nowAbsMonth,
     );
     if (active.length > 0) return active.map(({ label, t0Year, t0Month }) => ({ label, t0Year, t0Month }));
   }

@@ -1,6 +1,6 @@
 import type { AppSettings, KampagnenAuswahlItem } from '../../../shared/db/db';
 import { updateSettings } from '../../settings/data/settings';
-import { getDefaultKampagnen } from '../lib/ausbildungsPhasen';
+import { EZSV_TOTAL_QUARTERS, getDefaultKampagnen, TOTAL_QUARTERS } from '../lib/ausbildungsPhasen';
 
 export type { KampagnenAuswahlItem } from '../../../shared/db/db';
 export type KampagnenModus = 'nutzerauswahl' | 'alle_laufenden';
@@ -29,10 +29,12 @@ export function getGespeicherteKampagnenauswahl(
 
 export function getAnzuzeigendeKampagnen(
   settings: Pick<AppSettings, 'defaultKampagnenModus' | 'kampagnenAuswahl'>,
+  options: { includeEzsv?: boolean } = {},
 ): KampagnenAuswahlItem[] {
   const modus = normalizeKampagnenModus(settings.defaultKampagnenModus);
   if (modus === 'alle_laufenden') {
-    return getDefaultKampagnen('alle_laufenden');
+    const dauerInMonaten = (options.includeEzsv ? EZSV_TOTAL_QUARTERS : TOTAL_QUARTERS) / 4;
+    return getDefaultKampagnen('alle_laufenden', dauerInMonaten);
   }
   return getGespeicherteKampagnenauswahl(settings);
 }

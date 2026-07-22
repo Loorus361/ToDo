@@ -62,4 +62,18 @@ describe('kampagnenSettings', () => {
       { label: 'Februar 2026', t0Year: 2026, t0Month: 1 },
     ]);
   });
+
+  it('behält Kampagnen während des EZSV in der aktiven Ansicht', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-12T10:00:00Z'));
+
+    const standard = getAnzuzeigendeKampagnen({ defaultKampagnenModus: 'alle_laufenden' });
+    const mitEzsv = getAnzuzeigendeKampagnen(
+      { defaultKampagnenModus: 'alle_laufenden' },
+      { includeEzsv: true },
+    );
+
+    expect(standard).not.toContainEqual({ label: 'August 2024', t0Year: 2024, t0Month: 7 });
+    expect(mitEzsv).toContainEqual({ label: 'August 2024', t0Year: 2024, t0Month: 7 });
+  });
 });

@@ -4,8 +4,11 @@ import { Plus, X, GraduationCap } from 'lucide-react';
 import { clsx } from 'clsx';
 import {
   AUSBILDUNGS_BLOECKE,
+  EZSV_AUSBILDUNGS_BLOECKE,
+  EZSV_TOTAL_QUARTERS,
   PHASE_COLORS,
   TOTAL_QUARTERS,
+  getKampagnenLabelAtOffset,
   KAMPAGNE_LABELS,
   KAMPAGNE_MONATE,
   type StationBlock,
@@ -74,6 +77,7 @@ export default function AusbildungsverlaufView() {
   const [addMonthIdx, setAddMonthIdx] = useState(0);
   const [scale, setScale] = useState<ScaleOption>('mittel');
   const [scrollLeft, setScrollLeft] = useState(0);
+  const [showEzsv, setShowEzsv] = useState(false);
   const kampagnenModus = normalizeKampagnenModus(settings.defaultKampagnenModus);
   const istNutzerauswahl = kampagnenModus === 'nutzerauswahl';
   const gespeicherteKampagnen = useMemo(
@@ -81,9 +85,11 @@ export default function AusbildungsverlaufView() {
     [settings.kampagnenAuswahl],
   );
   const sortedKampagnen = useMemo(
-    () => sortKampagnenByStart(toViewKampagnen(getAnzuzeigendeKampagnen(settings))),
-    [settings.defaultKampagnenModus, settings.kampagnenAuswahl],
+    () => sortKampagnenByStart(toViewKampagnen(getAnzuzeigendeKampagnen(settings, { includeEzsv: showEzsv }))),
+    [settings.defaultKampagnenModus, settings.kampagnenAuswahl, showEzsv],
   );
+  const displayedBlocks = showEzsv ? EZSV_AUSBILDUNGS_BLOECKE : AUSBILDUNGS_BLOECKE;
+  const displayedDurationQuarters = showEzsv ? EZSV_TOTAL_QUARTERS : TOTAL_QUARTERS;
 
   // Scroll-Position für mitscrollende Labels verfolgen
   useEffect(() => {
@@ -137,7 +143,7 @@ export default function AusbildungsverlaufView() {
     for (const k of sortedKampagnen) {
       const kStart = toAbsQuarter(k.t0Year, k.t0Month);
       minQ = Math.min(minQ, kStart);
-      maxQ = Math.max(maxQ, kStart + TOTAL_QUARTERS);
+      maxQ = Math.max(maxQ, kStart + displayedDurationQuarters);
     }
 
     const total = maxQ - minQ;
@@ -156,11 +162,11 @@ export default function AusbildungsverlaufView() {
     }
 
     return { globalStartQuarter: minQ, totalQuarters: total, months: monthLabels };
-  }, [sortedKampagnen]);
+  }, [displayedDurationQuarters, sortedKampagnen]);
 
   const quarterColWidth = WIDTH_BY_SCALE[scale];
   const totalWidth = totalQuarters * quarterColWidth;
-  const layerCount = getMaxLayers(AUSBILDUNGS_BLOECKE);
+  const layerCount = getMaxLayers(displayedBlocks);
   const currentAbsQuarter = useMemo(() => {
     const now = new Date();
     const day = now.getDate();
@@ -196,6 +202,34 @@ export default function AusbildungsverlaufView() {
               <option value="alle_laufenden">Aktive Kampagnen</option>
               <option value="nutzerauswahl">Eigene Auswahl</option>
             </select>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={showEzsv}
+              onClick={() => setShowEzsv((current) => !current)}
+              className={clsx(
+                'flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium shadow-sm outline-none transition focus:ring-2 focus:ring-teal-200',
+                showEzsv
+                  ? 'border-teal-300 bg-teal-50 text-teal-800'
+                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300',
+              )}
+            >
+              <span
+                aria-hidden="true"
+                className={clsx(
+                  'relative h-5 w-9 rounded-full transition-colors',
+                  showEzsv ? 'bg-teal-600' : 'bg-gray-300',
+                )}
+              >
+                <span
+                  className={clsx(
+                    'absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform',
+                    showEzsv ? 'translate-x-[18px]' : 'translate-x-0.5',
+                  )}
+                />
+              </span>
+              EZSV-Verlauf
+            </button>
           </div>
 
           {istNutzerauswahl ? (
@@ -228,7 +262,11 @@ export default function AusbildungsverlaufView() {
               </button>
             </div>
           ) : (
-            <p className="text-xs text-gray-400">Alle derzeit laufenden Kampagnen werden automatisch angezeigt.</p>
+            <p className="text-xs text-gray-400">
+              {showEzsv
+                ? 'Aktive Kampagnen werden einschließlich EZSV und Wiederholungsprüfungen angezeigt.'
+                : 'Alle derzeit laufenden Kampagnen werden automatisch angezeigt.'}
+            </p>
           )}
         </div>
       </div>
@@ -236,14 +274,22 @@ export default function AusbildungsverlaufView() {
       {/* Legende */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex flex-wrap gap-3">
-          {Object.entries(PHASE_COLORS).map(([phase, colors]) => (
+          {Object.entries(PHASE_COLORS)
+            .filter(([phase]) => showEzsv || phase !== 'ezsv')
+            .map(([phase, colors]) => (
             <div key={phase} className="flex items-center gap-1.5">
               <div
                 className="w-3 h-3 rounded-sm border"
                 style={{ backgroundColor: colors.bg, borderColor: colors.border }}
               />
               <span className="text-xs text-gray-600 capitalize">
-                {phase === 'ag' ? 'Arbeitsgemeinschaft' : phase === 'pruefung' ? 'Prüfung' : phase}
+                {phase === 'ag'
+                  ? 'Arbeitsgemeinschaft'
+                  : phase === 'pruefung'
+                    ? 'Prüfung'
+                    : phase === 'ezsv'
+                      ? 'EZSV'
+                      : phase}
               </span>
             </div>
           ))}
@@ -323,6 +369,7 @@ export default function AusbildungsverlaufView() {
               <KampagneRow
                 key={kampagne.id}
                 kampagne={kampagne}
+                blocks={displayedBlocks}
                 globalStartQuarter={globalStartQuarter}
                 totalQuarters={totalQuarters}
                 layerCount={layerCount}
@@ -341,6 +388,7 @@ export default function AusbildungsverlaufView() {
 
 function KampagneRow({
   kampagne,
+  blocks,
   globalStartQuarter,
   totalQuarters,
   layerCount,
@@ -350,6 +398,7 @@ function KampagneRow({
   onRemove,
 }: {
   kampagne: Kampagne;
+  blocks: StationBlock[];
   globalStartQuarter: number;
   totalQuarters: number;
   layerCount: number;
@@ -403,7 +452,7 @@ function KampagneRow({
           </div>
 
           {/* Station-Blöcke (verschoben um Kampagne-Offset) */}
-          {AUSBILDUNGS_BLOECKE.map((block, idx) => {
+          {blocks.map((block) => {
             const colors = PHASE_COLORS[block.phase];
             const left = (offsetQuarters + block.startQuarter) * quarterColWidth;
             const width = (block.endQuarter - block.startQuarter) * quarterColWidth;
@@ -414,7 +463,18 @@ function KampagneRow({
             const startDate = new Date(kampagne.t0Year, kampagne.t0Month + Math.floor(block.startQuarter / 4), 1);
             const endDate = new Date(kampagne.t0Year, kampagne.t0Month + Math.floor((block.endQuarter - 1) / 4), 1);
 
-            const tooltip = `${block.label}\n${MONTH_NAMES[startDate.getMonth()]} ${startDate.getFullYear()} – ${MONTH_NAMES[endDate.getMonth()]} ${endDate.getFullYear()}`;
+            const examCampaign = block.examCampaignOffsetMonths == null
+              ? null
+              : getKampagnenLabelAtOffset(
+                kampagne.t0Year,
+                kampagne.t0Month,
+                block.examCampaignOffsetMonths,
+              );
+            const tooltip = [
+              block.label,
+              `${MONTH_NAMES[startDate.getMonth()]} ${startDate.getFullYear()} – ${MONTH_NAMES[endDate.getMonth()]} ${endDate.getFullYear()}`,
+              examCampaign ? `Prüfung mit Kampagne ${examCampaign}` : null,
+            ].filter(Boolean).join('\n');
 
             // Label mitscrollen: Offset berechnen, damit der Text im sichtbaren Teil des Blocks bleibt
             const hiddenLeft = Math.max(0, scrollLeft - left);
@@ -422,7 +482,7 @@ function KampagneRow({
 
             return (
               <div
-                key={idx}
+                key={`${block.label}-${block.startQuarter}-${block.layer}`}
                 className="absolute rounded-md border text-xs font-medium px-1.5 flex items-center cursor-default transition-shadow overflow-hidden"
                 style={{
                   left,
@@ -431,6 +491,7 @@ function KampagneRow({
                   height: 26,
                   backgroundColor: colors.bg,
                   borderColor: colors.border,
+                  borderStyle: block.phase === 'ezsv' ? 'dashed' : 'solid',
                   color: colors.text,
                   zIndex: isHovered ? 30 : 10,
                   boxShadow: isHovered ? `0 2px 8px ${colors.border}40` : 'none',
