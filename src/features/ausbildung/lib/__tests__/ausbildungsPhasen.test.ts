@@ -19,14 +19,15 @@ describe('EZSV-Ausbildungsverlauf', () => {
     expect(EZSV_TOTAL_QUARTERS).toBe(124);
   });
 
-  it('ersetzt die reguläre mündliche Prüfung durch die späteren Wiederholungsprüfungen', () => {
+  it('behält die Originalprüfungen und ergänzt die späteren Prüfungen als schraffierten EZSV-Pfad', () => {
     const exams = EZSV_AUSBILDUNGS_BLOECKE.filter((block) => block.type === 'pruefung');
 
     expect(exams).toEqual(expect.arrayContaining([
-      expect.objectContaining({ label: 'Wdh. schriftl. Examen', startQuarter: 112, examCampaignOffsetMonths: 9 }),
-      expect.objectContaining({ label: 'Mündl. Examen', startQuarter: 120, examCampaignOffsetMonths: 6 }),
+      expect.objectContaining({ label: 'Schriftl. Examen', startQuarter: 76, phase: 'pruefung' }),
+      expect.objectContaining({ label: 'Mündl. Examen', startQuarter: 96, phase: 'pruefung' }),
+      expect.objectContaining({ label: 'Wdh. schriftl. Examen', startQuarter: 112, phase: 'ezsv', examCampaignOffsetMonths: 9, hatched: true }),
+      expect.objectContaining({ label: 'Mündl. Examen', startQuarter: 120, phase: 'ezsv', examCampaignOffsetMonths: 6, hatched: true }),
     ]));
-    expect(exams).not.toContainEqual(expect.objectContaining({ label: 'Mündl. Examen', startQuarter: 96 }));
   });
 
   it('ordnet der Kampagne August 2024 die genannten Prüfungskampagnen zu', () => {

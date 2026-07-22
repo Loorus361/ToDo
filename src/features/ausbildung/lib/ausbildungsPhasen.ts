@@ -7,6 +7,7 @@ export interface StationBlock {
   type: 'abschnitt' | 'station' | 'ag' | 'klku' | 'pruefung';
   layer: number; // 0 = Hauptlayer, 1+ = überlagernde Layer
   examCampaignOffsetMonths?: number; // Startversatz der Kampagne, mit der eine Wiederholungsprüfung stattfindet
+  hatched?: boolean; // Kennzeichnet alternative Prüfungen im EZSV-Sonderverlauf
 }
 
 // Farben pro Phase
@@ -78,25 +79,27 @@ export const TOTAL_QUARTERS = 100; // 25 Monate × 4
 export const EZSV_TOTAL_QUARTERS = 124; // 31 Monate × 4 einschließlich Wiederholungsprüfungen
 
 export const EZSV_AUSBILDUNGS_BLOECKE: StationBlock[] = [
-  ...AUSBILDUNGS_BLOECKE.filter((block) => block.label !== 'Mündl. Examen'),
+  ...AUSBILDUNGS_BLOECKE,
   { label: 'EZSV', phase: 'ezsv', startQuarter: 96, endQuarter: 112, type: 'station', layer: 0 },
   {
     label: 'Wdh. schriftl. Examen',
-    phase: 'pruefung',
+    phase: 'ezsv',
     startQuarter: 112,
     endQuarter: 114,
     type: 'pruefung',
     layer: 1,
     examCampaignOffsetMonths: 9,
+    hatched: true,
   },
   {
     label: 'Mündl. Examen',
-    phase: 'pruefung',
+    phase: 'ezsv',
     startQuarter: 120,
     endQuarter: 124,
     type: 'pruefung',
     layer: 1,
     examCampaignOffsetMonths: 6,
+    hatched: true,
   },
 ];
 

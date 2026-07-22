@@ -206,29 +206,30 @@ export default function AusbildungsverlaufView() {
               type="button"
               role="switch"
               aria-checked={showEzsv}
+              aria-label="EZSV-Verlauf anzeigen"
               onClick={() => setShowEzsv((current) => !current)}
               className={clsx(
-                'flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium shadow-sm outline-none transition focus:ring-2 focus:ring-teal-200',
+                'group inline-flex items-center gap-2 rounded-full px-2 py-1.5 text-xs font-medium outline-none transition focus-visible:ring-2 focus-visible:ring-teal-300 focus-visible:ring-offset-2',
                 showEzsv
-                  ? 'border-teal-300 bg-teal-50 text-teal-800'
-                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300',
+                  ? 'bg-teal-50 text-teal-800'
+                  : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700',
               )}
             >
+              <span>EZSV</span>
               <span
                 aria-hidden="true"
                 className={clsx(
-                  'relative h-5 w-9 rounded-full transition-colors',
+                  'relative h-6 w-11 rounded-full shadow-inner transition-colors',
                   showEzsv ? 'bg-teal-600' : 'bg-gray-300',
                 )}
               >
                 <span
                   className={clsx(
-                    'absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform',
-                    showEzsv ? 'translate-x-[18px]' : 'translate-x-0.5',
+                    'absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform',
+                    showEzsv ? 'translate-x-5' : 'translate-x-0',
                   )}
                 />
               </span>
-              EZSV-Verlauf
             </button>
           </div>
 
@@ -490,8 +491,11 @@ function KampagneRow({
                   top,
                   height: 26,
                   backgroundColor: colors.bg,
+                  backgroundImage: block.hatched
+                    ? `repeating-linear-gradient(135deg, transparent 0, transparent 7px, ${colors.border}26 7px, ${colors.border}26 9px)`
+                    : undefined,
                   borderColor: colors.border,
-                  borderStyle: block.phase === 'ezsv' ? 'dashed' : 'solid',
+                  borderStyle: block.phase === 'ezsv' && block.type === 'station' ? 'dashed' : 'solid',
                   color: colors.text,
                   zIndex: isHovered ? 30 : 10,
                   boxShadow: isHovered ? `0 2px 8px ${colors.border}40` : 'none',
