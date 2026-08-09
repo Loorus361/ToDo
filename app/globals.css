@@ -32,11 +32,173 @@ body {
   min-height: 100%;
   color: #111827;
   background: #f9fafb;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 button,
 select,
 input {
   font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:not(:disabled),
+a {
+  cursor: pointer;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid rgb(59 130 246);
+  outline-offset: 2px;
+}
+
+@layer components {
+  .primary-button {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .secondary-button {
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50;
+  }
+
+  .danger-button {
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-3.5 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50;
+  }
+
+  .icon-button {
+    @apply inline-flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-800;
+  }
+
+  .sidebar-primary {
+    @apply flex min-h-12 items-center gap-3 rounded-xl px-3.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-900;
+  }
+
+  .sidebar-primary-active {
+    @apply border border-blue-200 bg-blue-50 text-blue-700 shadow-sm hover:bg-blue-50 hover:text-blue-700;
+  }
+
+  .sidebar-filter {
+    @apply flex min-h-11 w-full items-center justify-between rounded-xl px-3 text-left text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900;
+  }
+
+  .sidebar-filter-active {
+    @apply bg-slate-100 text-slate-950;
+  }
+
+  .count-badge {
+    @apply inline-flex min-w-7 items-center justify-center rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-500;
+  }
+
+  .search-field {
+    @apply h-11 w-[320px] items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-slate-400 shadow-sm focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100;
+  }
+
+  .search-field input {
+    @apply min-w-0 flex-1 border-0 bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400;
+  }
+
+  .quick-add {
+    @apply flex min-h-[70px] items-center gap-3 rounded-2xl border border-slate-200 bg-white p-2.5 shadow-sm focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-100;
+  }
+
+  .quick-add input {
+    @apply min-w-0 flex-1 border-0 bg-transparent px-2 text-base text-slate-900 outline-none placeholder:text-slate-400;
+  }
+
+  .filter-chip {
+    @apply inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700;
+  }
+
+  .tag-chip {
+    @apply inline-flex items-center rounded-lg border px-2 py-1 text-[11px] font-semibold;
+  }
+
+  .project-chip {
+    @apply inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-500;
+  }
+
+  .tag-option {
+    @apply inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-600 transition hover:border-slate-300;
+  }
+
+  .tag-option-selected {
+    border-color: color-mix(in srgb, var(--tag-color) 35%, white);
+    color: var(--tag-color);
+    background: color-mix(in srgb, var(--tag-color) 8%, white);
+  }
+
+  .todo-row {
+    @apply flex min-h-[74px] items-center gap-3 border-b border-slate-100 px-3.5 py-3 last:border-b-0 sm:px-4;
+  }
+
+  .todo-check {
+    @apply flex h-5 w-5 flex-none items-center justify-center rounded-md border border-slate-300 bg-white text-white transition hover:border-blue-500;
+  }
+
+  .todo-check-done {
+    @apply border-blue-600 bg-blue-600;
+  }
+
+  .form-field {
+    @apply block space-y-1.5;
+  }
+
+  .form-field > span,
+  .form-label {
+    @apply text-xs font-semibold uppercase tracking-wide text-slate-500;
+  }
+
+  .form-field small {
+    @apply block text-xs text-slate-400;
+  }
+
+  .form-input {
+    @apply min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100;
+  }
+
+  .project-card {
+    @apply block rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md;
+  }
+
+  .calendar-day {
+    @apply mx-auto flex h-11 w-10 flex-col items-center justify-center rounded-xl text-sm text-slate-700 transition hover:bg-slate-50;
+  }
+
+  .calendar-day-outside {
+    @apply text-slate-300;
+  }
+
+  .calendar-day-selected {
+    @apply border border-blue-200 bg-blue-50 font-semibold text-blue-700 hover:bg-blue-50;
+  }
+
+  .calendar-day-today:not(.calendar-day-selected) {
+    @apply font-semibold text-blue-700;
+  }
+
+  .mobile-nav {
+    @apply flex min-h-12 items-center justify-center gap-2 rounded-xl text-xs font-semibold text-slate-500;
+  }
+
+  .mobile-nav-active {
+    @apply bg-blue-50 text-blue-700;
+  }
+
+  .tag-filter-popover {
+    @apply invisible absolute left-0 top-full z-30 mt-2 max-h-64 w-56 translate-y-1 overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 opacity-0 shadow-xl transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100;
+  }
+}
+
+@media (max-width: 640px) {
+  .calendar-day {
+    width: 2.25rem;
+  }
 }
